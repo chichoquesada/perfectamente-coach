@@ -1,0 +1,217 @@
+{
+  "paciente": {
+    "nombre": "Carlos Esteban Quesada Víquez",
+    "edad": 44,
+    "genero": "Masculino",
+    "altura_cm": 180,
+    "peso_kg": 99.0
+  },
+  "objetivos": {
+    "principal": "Salud",
+    "secundario": "Bajar grasa"
+  },
+  "metodologia": "Low Carbs",
+  "comidas": [
+    {
+      "id": "al-despertar",
+      "nombre": "Al despertar",
+      "hora": "06:30",
+      "icono_sugerido": "🌅",
+      "descripcion_plan": "150g de fresas, arándanos o moras + ½ scoop de proteína AMP Advanced de GNC en agua",
+      "opciones": [
+        "150g fresas + ½ scoop AMP en agua",
+        "150g arándanos + ½ scoop AMP en agua",
+        "150g moras + ½ scoop AMP en agua"
+      ]
+    },
+    {
+      "id": "desayuno",
+      "nombre": "Desayuno",
+      "hora": "08:30",
+      "icono_sugerido": "🍳",
+      "descripcion_plan": "Opción A: 3 huevos + 2 rebanadas de proteína (o 50g de proteína) + 2 tortillas, o 40g de pan masa madre, o 80g de plátano/tubérculos, o gallo pinto (frijoles con 12h en remojo). Opción B: 200g de proteína + acompañamiento (mismas opciones). 1 taza de bebida caliente.",
+      "opciones": [
+        "3 huevos + 2 reb. proteína + 2 tortillas",
+        "3 huevos + 50g proteína + 40g pan masa madre",
+        "3 huevos + 50g proteína + 80g plátano o tubérculos",
+        "3 huevos + 50g proteína + gallo pinto",
+        "200g proteína + 2 tortillas",
+        "200g proteína + 40g pan masa madre",
+        "200g proteína + 80g plátano o tubérculos",
+        "200g proteína + gallo pinto"
+      ]
+    },
+    {
+      "id": "merienda-am",
+      "nombre": "Merienda AM",
+      "hora": "10:00",
+      "icono_sugerido": "🥤",
+      "descripcion_plan": "1 scoop de proteína AMP Advanced de GNC en agua",
+      "opciones": [
+        "1 scoop AMP Advanced en agua"
+      ]
+    },
+    {
+      "id": "almuerzo",
+      "nombre": "Almuerzo",
+      "hora": "12:00",
+      "icono_sugerido": "🍖",
+      "descripcion_plan": "250g de proteína peso crudo (o 200g cocida) + vegetales + ensalada + 100g de plátano, tubérculos, arroz, quinoa, pasta GF o leguminosas (con 12h en remojo)",
+      "opciones": [
+        "250g proteína + vegetales + ensalada + 100g plátano",
+        "250g proteína + vegetales + ensalada + 100g tubérculos",
+        "250g proteína + vegetales + ensalada + 100g arroz",
+        "250g proteína + vegetales + ensalada + 100g quinoa",
+        "250g proteína + vegetales + ensalada + 100g pasta GF",
+        "250g proteína + vegetales + ensalada + 100g leguminosas"
+      ]
+    },
+    {
+      "id": "merienda-3pm",
+      "nombre": "Merienda 3 PM",
+      "hora": "15:00",
+      "icono_sugerido": "🥪",
+      "descripcion_plan": "Opción A: 2 tortillas, 40g pan masa madre, o 1 sanissimo + 50g proteína (o 2 rebanadas). Opción B: 1 tosh, sweet well, nutrisnacks, fiber one o rosquillas sanissimo + 1 yogurt yoplait doble cero o 60g de helado proteína plus de Dos Pinos.",
+      "opciones": [
+        "2 tortillas + 50g proteína",
+        "40g pan masa madre + 50g proteína",
+        "1 sanissimo + 50g proteína",
+        "1 tosh + 1 yogurt yoplait doble cero",
+        "1 sweet well + 60g helado proteína plus",
+        "1 nutrisnacks + 1 yogurt yoplait doble cero",
+        "1 fiber one + 60g helado proteína plus",
+        "1 rosquilla sanissimo + 1 yogurt yoplait doble cero"
+      ]
+    },
+    {
+      "id": "merienda-5pm",
+      "nombre": "Merienda 5 PM",
+      "hora": "17:00",
+      "icono_sugerido": "🥪",
+      "descripcion_plan": "Mismas opciones que merienda de 3 PM",
+      "opciones": [
+        "2 tortillas + 50g proteína",
+        "40g pan masa madre + 50g proteína",
+        "1 sanissimo + 50g proteína",
+        "1 tosh + 1 yogurt yoplait doble cero",
+        "1 sweet well + 60g helado proteína plus",
+        "1 nutrisnacks + 1 yogurt yoplait doble cero",
+        "1 fiber one + 60g helado proteína plus"
+      ]
+    },
+    {
+      "id": "cena",
+      "nombre": "Cena",
+      "hora": "19:30",
+      "icono_sugerido": "🍽️",
+      "descripcion_plan": "250g de proteína peso crudo (o 200g cocida) + vegetales + ensalada + 100g de plátano, tubérculos, arroz, quinoa, pasta GF o leguminosas (con 12h en remojo)",
+      "opciones": [
+        "250g proteína + vegetales + ensalada + 100g plátano",
+        "250g proteína + vegetales + ensalada + 100g tubérculos",
+        "250g proteína + vegetales + ensalada + 100g arroz",
+        "250g proteína + vegetales + ensalada + 100g quinoa",
+        "250g proteína + vegetales + ensalada + 100g pasta GF",
+        "250g proteína + vegetales + ensalada + 100g leguminosas"
+      ]
+    }
+  ],
+  "suplementos": [
+    {
+      "id": "creatina",
+      "nombre": "Creatina Monohidrato",
+      "dosis": "10g",
+      "horario": "Desayuno",
+      "frecuencia": "diaria",
+      "tipo": "nutricional",
+      "incluir_en_app": true,
+      "razon_exclusion": null
+    },
+    {
+      "id": "derovit-k",
+      "nombre": "Derovit K",
+      "dosis": "1 cápsula",
+      "horario": "Desayuno",
+      "frecuencia": "diaria",
+      "tipo": "nutricional",
+      "incluir_en_app": true,
+      "razon_exclusion": null
+    },
+    {
+      "id": "agua-sal",
+      "nombre": "Agua + Sal Himalaya",
+      "dosis": "1000ml + 5g sal",
+      "horario": "Distribuido durante el día",
+      "frecuencia": "diaria",
+      "tipo": "hidratacion",
+      "incluir_en_app": true,
+      "razon_exclusion": null
+    },
+    {
+      "id": "testosterona",
+      "nombre": "Testosterona Cipionato",
+      "dosis": "125mg IM",
+      "horario": "Cada 6 días",
+      "frecuencia": "semanal",
+      "tipo": "otro",
+      "incluir_en_app": false,
+      "razon_exclusion": "Hormona regulada bajo prescripción médica — debe manejarse directamente con el médico tratante, no en una app de tracking general"
+    },
+    {
+      "id": "hcg",
+      "nombre": "HCG",
+      "dosis": "5000ui IM",
+      "horario": "1 vez al mes",
+      "frecuencia": "mensual",
+      "tipo": "otro",
+      "incluir_en_app": false,
+      "razon_exclusion": "Hormona regulada bajo prescripción médica — debe manejarse directamente con el médico tratante, no en una app de tracking general"
+    }
+  ],
+  "hidratacion": {
+    "agua_ml": 1000,
+    "extras": "+ 5g sal himalaya distribuidos en el día"
+  },
+  "reglas_generales": {
+    "alimentos_permitidos": {
+      "vegetales": ["brócoli", "coliflor", "vainicas", "zuquini", "berenjena", "chayote", "ayote tierno"],
+      "ensaladas": ["espinaca", "perejil", "albahaca", "acelga", "arrúgala", "kale", "pepino", "lechuga", "tomate", "palmito"],
+      "proteinas": [
+        "Res: lomito, lomo, molida premium, mechada (máx 3 v/sem)",
+        "Cerdo magro (máx 1 v/sem)",
+        "Huevos de pastoreo",
+        "Pollo de pastoreo",
+        "Pescados de mar: dorado, róbalo, corvina, pargo, atún en lata Sardimar, tilapia St. Peters, salmón, atún fresco, mariscos, crustáceos, sardina (1 v/sem)",
+        "Rebanadas: Roast Beef o Pavo Dietz & Watson, pavo Member Selection, jamón Castillo de Roble, Black Forest, jamones sin soya",
+        "Quesos: cottage, masproteína, mozzarella fresco, ricotta de búfala"
+      ],
+      "tuberculos": ["papa", "yuca", "camote", "name", "tiquisque", "nampi", "zanahoria", "remolacha"],
+      "bebidas": ["agua", "café", "té", "agua con limón", "soda con limón", "máx 3 v/sem bebidas 0 azúcar"],
+      "especias": ["cebolla", "chile", "culantro", "ajo", "perejil", "pimienta", "sal", "orégano", "romero", "tomillo"],
+      "snacks_ansiedad": ["1 taza gelatina dietex", "flan dietex", "1 sobre suspiros sweet well", "1 taza palomitas saladas"]
+    },
+    "alimentos_evitar": [
+      "Azúcar",
+      "Edulcorantes",
+      "Pastas",
+      "Panes (no masa madre)",
+      "Gaseosas",
+      "Maní",
+      "Pescados cultivados (tilapia, trucha, salmón chileno, corvineta, pángasio)"
+    ],
+    "comida_libre": "1 comida libre por semana",
+    "notas": [
+      "Cocinar con aceite de oliva o aguacate",
+      "Eliminar meriendas del día durante la comida libre (sin azúcar)",
+      "Frijoles deben tener 12h en remojo antes de cocción",
+      "Salmón, atún fresco, mariscos, crustáceos y sardina: solo 1 vez por semana"
+    ]
+  },
+  "validacion": {
+    "completitud": "alta",
+    "campos_faltantes": [],
+    "advertencias": [
+      "El plan incluye protocolo hormonal (Testosterona y HCG) que se EXCLUYE automáticamente de la app por seguridad — debe manejarse con el médico tratante",
+      "Plan diseñado para atleta competitivo de alto rendimiento — el cálculo calórico (5043 kcal/día detectado) es muy alto y específico para este caso"
+    ]
+  }
+}

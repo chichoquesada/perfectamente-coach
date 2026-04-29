@@ -1,0 +1,3036 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PerfectaMENTE Coach — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-elevated: #141414;
+    --bg-card: #1a1a1a;
+    --gold: #FFD264;
+    --gold-soft: rgba(255, 210, 100, 0.12);
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.12);
+    --text: #f5f5f5;
+    --text-dim: #b8b8b8;
+    --text-faint: #808080;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body {
+    background: radial-gradient(ellipse at top, rgba(255, 210, 100, 0.04), transparent 60%), var(--bg);
+    background-attachment: fixed;
+  }
+
+  /* === SCREENS === */
+  .screen {
+    min-height: 100vh;
+    display: none;
+    flex-direction: column;
+    padding: 28px 22px 100px;
+    max-width: 600px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === BRAND === */
+  .brand-top {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  .brand-top span { color: var(--gold); }
+
+  /* === LANDING SCREEN === */
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--gold-soft);
+    color: var(--gold);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 auto 24px;
+    border: 1px solid rgba(255,210,100,0.2);
+  }
+
+  .hero-dot {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero-h1 {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 34px;
+    line-height: 1.1;
+    text-align: center;
+    margin-bottom: 18px;
+    letter-spacing: -0.01em;
+  }
+  .hero-h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 32px;
+    line-height: 1.55;
+  }
+
+  .pain-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    padding: 18px 18px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+  }
+  .pain-text {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .pain-text span { color: var(--gold); }
+  .pain-author {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+  }
+
+  .steps-mini {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .step-mini {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .step-mini-num {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 26px;
+    color: var(--gold);
+    line-height: 1;
+    width: 30px;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+  .step-mini-body { flex: 1; }
+  .step-mini-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .step-mini-desc {
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .cta-big {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 12px 30px rgba(255, 210, 100, 0.2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .cta-big:active { transform: translateY(1px); }
+  .cta-big-arrow { transition: transform 0.2s; }
+  .cta-big:active .cta-big-arrow { transform: translateX(3px); }
+
+  .credential {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.15em;
+  }
+  .credential span { color: var(--gold); }
+
+  /* === EXTRACTING SCREEN === */
+  .extract-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .extract-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+
+  .extract-steps {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: left;
+  }
+  .extract-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text-faint);
+    transition: all 0.4s;
+  }
+  .extract-step.active { color: var(--gold); }
+  .extract-step.done { color: var(--green); }
+  .extract-step-icon {
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* === REVIEW SCREEN === */
+  .ai-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--gold-soft);
+    color: var(--gold);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,210,100,0.2);
+  }
+
+  .review-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .review-title em { color: var(--gold); font-style: italic; }
+  .review-sub {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .section-label {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 11px;
+    color: #b8b8b8;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin: 22px 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--text-dim); }
+  .info-value { font-weight: 500; }
+
+  .meal-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-row:last-child { border-bottom: none; }
+  .meal-row-icon { font-size: 18px; }
+  .meal-row-time {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.15em;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .meal-row-name {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .alert-box {
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: #fbbf24;
+    line-height: 1.5;
+  }
+  .alert-box strong { display: block; margin-bottom: 4px; }
+
+  /* === APP SCREEN === */
+  .app-header {
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+
+  .app-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .app-brand {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .app-brand span { color: var(--gold); }
+
+  .app-date {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ring {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+  }
+  .ring svg { transform: rotate(-90deg); }
+  .ring-bg { stroke: rgba(255,255,255,0.1); fill: none; stroke-width: 5; }
+  .ring-fg {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke: var(--gold);
+    transition: stroke-dashoffset 0.6s, stroke 0.4s;
+    filter: drop-shadow(0 0 6px rgba(255,210,100,0.3));
+  }
+  .ring-pct {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--gold);
+  }
+
+  .score-meta { flex: 1; }
+  .score-label {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.1;
+    margin-bottom: 2px;
+  }
+  .score-detail { font-size: 11px; color: var(--text-dim); }
+
+  /* CARD */
+  .check-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .check-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.3s;
+  }
+  .check-card.fiel {
+    border-color: rgba(74,222,128,0.35);
+    background: var(--bg-card);
+  }
+  .check-card.fiel::before { background: var(--green); }
+
+  .check-card.parcial {
+    border-color: rgba(251,191,36,0.35);
+    background: var(--bg-card);
+  }
+  .check-card.parcial::before { background: var(--amber); }
+
+  .check-card.nofiel {
+    border-color: rgba(239,68,68,0.35);
+    background: var(--bg-card);
+  }
+  .check-card.nofiel::before { background: var(--red); }
+  .check-card:active { transform: scale(0.98); }
+
+  .check-icon {
+    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .check-body { flex: 1; min-width: 0; }
+  .check-time {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.15em;
+    margin-bottom: 1px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .check-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .check-detail {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .check-status {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .check-card.fiel .check-status { background: var(--green); border-color: var(--green); color: #000; }
+  .check-card.parcial .check-status { background: var(--amber); border-color: var(--amber); color: #000; }
+  .check-card.nofiel .check-status { background: var(--red); border-color: var(--red); color: #fff; }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-bg.show { opacity: 1; pointer-events: all; }
+
+  .modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-elevated);
+    border-radius: 22px 22px 0 0;
+    padding: 22px 20px 28px;
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    border-top: 1px solid var(--border-strong);
+    max-width: 600px;
+    margin: 0 auto;
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal.show { transform: translateY(0); }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border-strong);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+    position: sticky;
+    top: 0;
+  }
+
+  .modal-icon {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .modal-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .modal-time {
+    text-align: center;
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .modal-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  .modal-section-label {
+    font-size: 9px;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .modal-options {
+    list-style: none;
+    padding: 0;
+  }
+  .modal-options li {
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.45;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+  .modal-options li:last-child { border-bottom: none; }
+  .modal-options li::before {
+    content: '·';
+    color: var(--gold);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .modal-tip {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.55;
+  }
+
+  .modal-notas {
+    list-style: none;
+    padding: 0;
+  }
+  .modal-notas li {
+    padding: 5px 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.45;
+    display: flex;
+    gap: 8px;
+  }
+  .modal-notas li::before {
+    content: '→';
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  .modal-q-bottom {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    text-align: center;
+    margin: 18px 0 12px;
+    font-size: 13px;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .status-btn {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: 13px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .status-btn-icon { font-size: 22px; }
+  .status-btn:active { transform: scale(0.95); }
+  .status-btn.fiel.selected { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+  .status-btn.parcial.selected { border-color: var(--amber); background: var(--amber-dim); color: var(--amber); }
+  .status-btn.nofiel.selected { border-color: var(--red); background: var(--red-dim); color: var(--red); }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-prim { background: var(--gold); color: #000; border-color: var(--gold); }
+  .btn-clear { color: var(--red); border-color: rgba(239,68,68,0.3); }
+  .btn:active { transform: scale(0.97); }
+
+  /* SUCCESS BANNER */
+  .success-banner {
+    background: var(--bg-card);
+    border: 1px solid rgba(74,222,128,0.4);
+    border-left: 3px solid var(--green);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .success-banner-icon {
+    font-size: 24px;
+  }
+  .success-banner-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--green);
+    margin-bottom: 2px;
+  }
+  .success-banner-desc {
+    font-size: 11px;
+    color: var(--text);
+    opacity: 0.75;
+    line-height: 1.4;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--gold);
+    color: #000;
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+    z-index: 200;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 10px 30px rgba(255,210,100,0.25);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .restart {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    z-index: 50;
+    letter-spacing: 0.1em;
+  }
+  .restart:active { background: var(--bg-elevated); }
+
+  /* === NOTIF BANNER === */
+  .notif-banner {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,210,100,0.4);
+    border-left: 3px solid var(--gold);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.5s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .notif-banner.hidden { display: none; }
+  .notif-banner.success {
+    border-color: rgba(74,222,128,0.4);
+    border-left-color: var(--green);
+  }
+  .notif-banner.success .notif-banner-title { color: var(--green); }
+  .notif-banner-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .notif-banner-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .notif-banner-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--gold);
+    margin-bottom: 2px;
+  }
+  .notif-banner-desc {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.4;
+    opacity: 0.75;
+  }
+  .notif-banner-btn {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+  .notif-banner-btn:active { transform: scale(0.95); }
+
+  /* === MODE SELECTOR === */
+  .mode-selector {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+  .mode-selector-label {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: #b8b8b8;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .mode-btn {
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: 10px 4px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .mode-btn-icon { font-size: 20px; }
+  .mode-btn:active { transform: scale(0.96); }
+  .mode-btn.active {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+    color: var(--gold);
+  }
+  .mode-btn.suggested::after {
+    content: 'sugerido';
+    position: absolute;
+    top: -8px;
+    right: -4px;
+    background: var(--gold);
+    color: #000;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 999px;
+    letter-spacing: 0.05em;
+  }
+  .mode-btn { position: relative; }
+
+  /* === MI PLAN VIEW === */
+  .plan-hero {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--gold);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+  }
+  .plan-hero-eyebrow {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .plan-hero-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 32px;
+    color: var(--text);
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+  .plan-hero-objs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .plan-hero-objs > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .plan-hero-obj-label {
+    font-size: 9px;
+    color: #b8b8b8;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .plan-hero-obj-val {
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .plan-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .plan-card-danger {
+    border-left: 3px solid var(--red);
+  }
+  .plan-card-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .plan-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .plan-tag {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: #d8d8d8;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    line-height: 1.3;
+  }
+  .plan-tag-danger {
+    background: rgba(239,68,68,0.08);
+    border-color: rgba(239,68,68,0.25);
+    color: #ffb4b4;
+  }
+  .plan-libre {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .tab-bar {
+    display: flex;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 18px;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tab-btn-icon { font-size: 14px; }
+  .tab-btn:active { transform: scale(0.98); }
+  .tab-btn.active {
+    background: var(--bg-elevated);
+    color: var(--gold);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .view { display: none; animation: fadeIn 0.3s; }
+  .view.active { display: block; }
+
+  /* === DASHBOARD HERO === */
+  .dash-hero {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 18px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 100%, rgba(255,210,100,0.06), transparent 50%);
+    pointer-events: none;
+  }
+  .dash-hero-eyebrow {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .dash-hero-num {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,210,100,0.3);
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .dash-hero-label {
+    font-size: 13px;
+    color: #d0d0d0;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    position: relative;
+    font-weight: 500;
+  }
+  .dash-hero-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(74,222,128,0.18);
+    color: var(--green);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid rgba(74,222,128,0.35);
+    position: relative;
+  }
+  .dash-hero-trend.down {
+    background: rgba(239,68,68,0.18);
+    color: var(--red);
+    border-color: rgba(239,68,68,0.35);
+  }
+
+  /* === STATS GRID === */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .dash-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .dash-stat-num {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .dash-stat-label {
+    font-size: 10px;
+    color: #c0c0c0;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* === IA INSIGHT === */
+  .ia-insight {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,210,100,0.3);
+    border-left: 3px solid var(--gold);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .ia-insight-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--gold-soft);
+    color: var(--gold);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,210,100,0.3);
+  }
+  .ia-insight-text {
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #f5f5f5;
+  }
+  .ia-insight-text em { color: var(--gold); font-style: italic; }
+  .ia-insight-text strong { color: var(--gold); font-weight: 600; }
+
+  /* === DASH CARD === */
+  .dash-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .dash-card-sub {
+    font-size: 12px;
+    color: #b0b0b0;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  /* === HARD MEALS === */
+  .hard-meal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hard-meal:last-child { border-bottom: none; }
+  .hard-meal-rank {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: var(--gold);
+    font-size: 22px;
+    line-height: 1;
+    width: 24px;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+  .hard-meal-icon {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .hard-meal-body { flex: 1; min-width: 0; }
+  .hard-meal-name {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .hard-meal-bar-wrap {
+    height: 6px;
+    background: var(--bg-elevated);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hard-meal-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease-out;
+  }
+  .hard-meal-bar.danger { background: linear-gradient(90deg, var(--red), #ff6b6b); }
+  .hard-meal-bar.warn { background: linear-gradient(90deg, var(--amber), #fcd34d); }
+  .hard-meal-bar.ok { background: linear-gradient(90deg, var(--green), #86efac); }
+  .hard-meal-pct {
+    font-size: 13px;
+    font-weight: 700;
+    width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .hard-meal-pct.danger { color: var(--red); }
+  .hard-meal-pct.warn { color: var(--amber); }
+  .hard-meal-pct.ok { color: var(--green); }
+
+  /* === WEEK PATTERN === */
+  .week-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .week-row:last-child { border-bottom: none; }
+  .week-day {
+    width: 36px;
+    font-size: 11px;
+    color: #d0d0d0;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .week-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-elevated);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .week-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease-out;
+  }
+  .week-bar.bad { background: var(--red); }
+  .week-bar.mid { background: var(--amber); }
+  .week-bar.good { background: var(--green); }
+  .week-bar.best { background: linear-gradient(90deg, var(--green), var(--gold)); }
+  .week-pct {
+    width: 40px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* === HEATMAP === */
+  .heatmap {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .heat-cell {
+    aspect-ratio: 1;
+    background: var(--bg-elevated);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .heat-cell:hover { transform: scale(1.15); z-index: 2; }
+  .heat-cell.today { box-shadow: 0 0 0 2px var(--gold); }
+  .heat-cell.lvl-1 { background: rgba(239,68,68,0.5); border-color: transparent; }
+  .heat-cell.lvl-2 { background: rgba(251,191,36,0.6); border-color: transparent; }
+  .heat-cell.lvl-3 { background: rgba(74,222,128,0.6); border-color: transparent; }
+  .heat-cell.lvl-4 { background: var(--green); border-color: transparent; }
+
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+  }
+  .legend-cells {
+    display: flex;
+    gap: 3px;
+  }
+  .legend-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<button class="restart" id="restartBtn">↺ Reiniciar</button>
+
+<!-- ========== SCREEN 1: LANDING ========== -->
+<div class="screen active" id="screen-landing">
+  <div class="brand-top">Perfecta<span>MENTE</span> Coach</div>
+
+  <div style="text-align:center;">
+    <div class="hero-eyebrow">
+      <span class="hero-dot"></span>
+      Demo interactivo
+    </div>
+  </div>
+
+  <h1 class="hero-h1">Su nutricionista le dio un plan.<br><em>Nosotros lo hacemos cumplirlo.</em></h1>
+
+  <p class="hero-sub">Suba el PDF de su plan. La IA lo lee, lo organiza y le entrega un tablero diario donde solo tiene que hacer check.</p>
+
+  <div class="pain-box">
+    <p class="pain-text">"Su plan no falla porque sea malo. Falla porque <span>el PDF se perdió</span> en su WhatsApp hace tres semanas."</p>
+    <p class="pain-author">— @CHICHOQV</p>
+  </div>
+
+  <div class="steps-mini">
+    <div class="step-mini">
+      <div class="step-mini-num">01</div>
+      <div class="step-mini-body">
+        <div class="step-mini-title">Suba su plan</div>
+        <div class="step-mini-desc">PDF, foto o texto. Lo que le mandó su nutri.</div>
+      </div>
+    </div>
+    <div class="step-mini">
+      <div class="step-mini-num">02</div>
+      <div class="step-mini-body">
+        <div class="step-mini-title">La IA lo organiza</div>
+        <div class="step-mini-desc">Detecta comidas, horarios, opciones. En 30 segundos.</div>
+      </div>
+    </div>
+    <div class="step-mini">
+      <div class="step-mini-num">03</div>
+      <div class="step-mini-body">
+        <div class="step-mini-title">Solo haga check</div>
+        <div class="step-mini-desc">Fiel, parcial o no fiel. Su racha empieza hoy.</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="cta-big" id="startBtn">
+    Probar el demo
+    <span class="cta-big-arrow">→</span>
+  </button>
+  <div class="credential">DISEÑADA POR <span>@CHICHOQV</span> · CROSSFIT GAMES CHAMPION 2024</div>
+</div>
+
+<!-- ========== SCREEN 2: EXTRACTING ========== -->
+<div class="screen" id="screen-extract">
+  <div class="brand-top">Perfecta<span>MENTE</span> Coach</div>
+  <div class="extract-state">
+    <div class="spinner"></div>
+    <div class="hero-eyebrow" style="margin: 0 auto 12px;">
+      <span class="hero-dot"></span>
+      Procesando con IA
+    </div>
+    <h2 class="extract-title">Leyendo su plan...</h2>
+    <div class="extract-steps" id="extractSteps">
+      <div class="extract-step" data-i="0"><span class="extract-step-icon">·</span><span>Leyendo el documento</span></div>
+      <div class="extract-step" data-i="1"><span class="extract-step-icon">·</span><span>Identificando comidas y horarios</span></div>
+      <div class="extract-step" data-i="2"><span class="extract-step-icon">·</span><span>Detectando suplementos</span></div>
+      <div class="extract-step" data-i="3"><span class="extract-step-icon">·</span><span>Validando seguridad</span></div>
+      <div class="extract-step" data-i="4"><span class="extract-step-icon">·</span><span>Construyendo su tablero</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN 3: REVIEW ========== -->
+<div class="screen" id="screen-review">
+  <div class="brand-top">Perfecta<span>MENTE</span> Coach</div>
+  <div class="ai-tag">✨ Extraído por IA</div>
+  <h2 class="review-title">Su plan, <em>listo.</em></h2>
+  <p class="review-sub">Revise lo que extrajimos. Si todo está bien, empezamos.</p>
+
+  <div class="section-label">Paciente</div>
+  <div class="info-card">
+    <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">Carlos Esteban Quesada V.</span></div>
+    <div class="info-row"><span class="info-label">Edad</span><span class="info-value">44 años</span></div>
+    <div class="info-row"><span class="info-label">Altura · Peso</span><span class="info-value">180 cm · 99 kg</span></div>
+  </div>
+
+  <div class="section-label">Objetivo</div>
+  <div class="info-card">
+    <div class="info-row"><span class="info-label">Principal</span><span class="info-value">Salud</span></div>
+    <div class="info-row"><span class="info-label">Secundario</span><span class="info-value">Bajar grasa</span></div>
+    <div class="info-row"><span class="info-label">Metodología</span><span class="info-value">Low Carbs</span></div>
+  </div>
+
+  <div class="section-label">Plan diario</div>
+  <div class="info-card">
+    <div class="meal-row"><div class="meal-row-icon">🌅</div><div style="flex:1;"><div class="meal-row-time">6:30 AM</div><div class="meal-row-name">Al despertar</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">🍳</div><div style="flex:1;"><div class="meal-row-time">8:30 AM</div><div class="meal-row-name">Desayuno</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">🥤</div><div style="flex:1;"><div class="meal-row-time">10:00 AM</div><div class="meal-row-name">Merienda</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">🍖</div><div style="flex:1;"><div class="meal-row-time">12:00 PM</div><div class="meal-row-name">Almuerzo</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">🥪</div><div style="flex:1;"><div class="meal-row-time">3:00 PM</div><div class="meal-row-name">Merienda</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">🥪</div><div style="flex:1;"><div class="meal-row-time">5:00 PM</div><div class="meal-row-name">Merienda</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">🍽️</div><div style="flex:1;"><div class="meal-row-time">7:30 PM</div><div class="meal-row-name">Cena</div></div></div>
+  </div>
+
+  <div class="section-label">Suplementos</div>
+  <div class="info-card">
+    <div class="meal-row"><div class="meal-row-icon">💊</div><div style="flex:1;"><div class="meal-row-time">DESAYUNO</div><div class="meal-row-name">Creatina · 10g</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">💧</div><div style="flex:1;"><div class="meal-row-time">TODO EL DÍA</div><div class="meal-row-name">Agua + sal himalaya · 1000ml</div></div></div>
+    <div class="meal-row"><div class="meal-row-icon">💊</div><div style="flex:1;"><div class="meal-row-time">DESAYUNO</div><div class="meal-row-name">Derovit K · 1 cápsula</div></div></div>
+  </div>
+
+  <button class="cta-big" id="confirmBtn" style="margin-top: 24px;">
+    Empezar mi reto
+    <span class="cta-big-arrow">→</span>
+  </button>
+</div>
+
+<!-- ========== SCREEN 4: APP ========== -->
+<div class="screen" id="screen-app">
+  <div class="success-banner" id="successBanner">
+    <div class="success-banner-icon">✨</div>
+    <div>
+      <div class="success-banner-title">¡Tablero listo!</div>
+      <div class="success-banner-desc">Tiene 30 días de datos simulados. Explore el Dashboard.</div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-view="hoy">
+      <span class="tab-btn-icon">○</span>
+      <span>Hoy</span>
+    </button>
+    <button class="tab-btn" data-view="dashboard">
+      <span class="tab-btn-icon">▣</span>
+      <span>Dashboard</span>
+    </button>
+    <button class="tab-btn" data-view="plan">
+      <span class="tab-btn-icon">📋</span>
+      <span>Mi Plan</span>
+    </button>
+  </div>
+
+  <!-- VIEW: HOY -->
+  <div id="view-hoy" class="view active">
+
+    <!-- Banner notificaciones -->
+    <div class="notif-banner" id="notifBanner">
+      <div class="notif-banner-icon">🔔</div>
+      <div class="notif-banner-body">
+        <div class="notif-banner-title">Active los avisos</div>
+        <div class="notif-banner-desc">Recordatorios a la hora exacta de cada comida y suplemento.</div>
+      </div>
+      <button class="notif-banner-btn" id="enableNotifBtn">Activar</button>
+    </div>
+
+    <div class="app-header">
+      <div class="app-header-top">
+        <div class="app-brand">Perfecta<span>MENTE</span></div>
+        <div class="app-date" id="appDate">—</div>
+      </div>
+      <div class="score-row">
+        <div class="ring">
+          <svg width="64" height="64">
+            <circle class="ring-bg" cx="32" cy="32" r="27"></circle>
+            <circle class="ring-fg" id="ringFg" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"></circle>
+          </svg>
+          <div class="ring-pct" id="ringPct">0%</div>
+        </div>
+        <div class="score-meta">
+          <div class="score-label" id="scoreLabel">Construya su día</div>
+          <div class="score-detail" id="scoreDetail">0 de 10 completados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selector de modo del día -->
+    <div class="mode-selector">
+      <div class="mode-selector-label">¿Cómo es hoy?</div>
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="descanso">
+          <span class="mode-btn-icon">🌱</span>
+          <span class="mode-btn-text">Descanso</span>
+        </button>
+        <button class="mode-btn" data-mode="entreno">
+          <span class="mode-btn-icon">💪</span>
+          <span class="mode-btn-text">Entreno</span>
+        </button>
+        <button class="mode-btn" data-mode="competencia">
+          <span class="mode-btn-icon">🏆</span>
+          <span class="mode-btn-text">Competencia</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section-label">Alimentación</div>
+    <div id="comidasList"></div>
+
+    <!-- Comidas de entreno (solo modo entreno o competencia) -->
+    <div id="entrenoSection" style="display:none;">
+      <div class="section-label" id="entrenoSectionLabel">Pre / Durante / Post</div>
+      <div id="entrenoList"></div>
+    </div>
+
+    <div class="section-label">Hidratación &amp; Suplementos</div>
+    <div id="supList"></div>
+
+    <!-- Suplementos de entreno (solo modo entreno o competencia) -->
+    <div id="supEntrenoSection" style="display:none;">
+      <div class="section-label">Suplementos de entreno</div>
+      <div id="supEntrenoList"></div>
+    </div>
+
+    <div style="text-align:center; margin-top: 30px; padding: 24px 0; border-top: 1px solid var(--border);">
+      <p style="font-family: 'Lora', serif; font-style: italic; font-size: 14px; color: var(--text-dim); margin-bottom: 16px;">"La fidelidad diaria es lo que separa a los campeones del resto."</p>
+      <p style="font-size: 10px; letter-spacing: 0.2em; color: var(--gold);">@CHICHOQV</p>
+    </div>
+  </div>
+
+  <!-- VIEW: DASHBOARD -->
+  <div id="view-dashboard" class="view">
+
+    <!-- Hero stat -->
+    <div class="dash-hero">
+      <div class="dash-hero-eyebrow">Últimos 30 días</div>
+      <div class="dash-hero-num" id="dashAvg">—</div>
+      <div class="dash-hero-label">Fidelidad promedio</div>
+      <div class="dash-hero-trend" id="dashTrend">—</div>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <div class="dash-stat-num" id="dashStreak">—</div>
+        <div class="dash-stat-label">Racha actual</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-num" id="dashBest">—</div>
+        <div class="dash-stat-label">Mejor día</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-num" id="dashPerfect">—</div>
+        <div class="dash-stat-label">Días perfectos</div>
+      </div>
+    </div>
+
+    <!-- IA insight -->
+    <div class="ia-insight">
+      <div class="ia-insight-tag">
+        <span>✨</span> Análisis IA
+      </div>
+      <p class="ia-insight-text" id="iaText">—</p>
+    </div>
+
+    <!-- Comidas más difíciles -->
+    <div class="section-label">Su talón de Aquiles</div>
+    <div class="dash-card">
+      <div class="dash-card-sub">Las comidas que más se le escapan, ordenadas por % de fallo.</div>
+      <div id="hardMealsList"></div>
+    </div>
+
+    <!-- Patrón semanal -->
+    <div class="section-label">Patrón por día</div>
+    <div class="dash-card">
+      <div class="dash-card-sub">Promedio de fidelidad según día de la semana.</div>
+      <div id="weekPattern"></div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="section-label">Calendario · 30 días</div>
+    <div class="dash-card">
+      <div class="dash-card-sub">Cada cuadro es un día. Verde = fiel, amarillo = parcial, rojo = flojo.</div>
+      <div class="heatmap" id="heatmap"></div>
+      <div class="heatmap-legend">
+        <span>Menos</span>
+        <div class="legend-cells">
+          <div class="legend-cell" style="background: var(--bg-elevated);"></div>
+          <div class="legend-cell" style="background: rgba(239,68,68,0.5);"></div>
+          <div class="legend-cell" style="background: rgba(251,191,36,0.6);"></div>
+          <div class="legend-cell" style="background: rgba(74,222,128,0.6);"></div>
+          <div class="legend-cell" style="background: var(--green);"></div>
+        </div>
+        <span>Más</span>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top: 30px; padding: 24px 0;">
+      <p style="font-family: 'Lora', serif; font-style: italic; font-size: 13px; color: var(--text-dim);">El dato no juzga. Le muestra dónde apuntar.</p>
+    </div>
+  </div>
+
+  <!-- VIEW: MI PLAN -->
+  <div id="view-plan" class="view">
+
+    <div class="plan-hero">
+      <div class="plan-hero-eyebrow">Su plan</div>
+      <div class="plan-hero-title" id="planMetodologia">FODMAP</div>
+      <div class="plan-hero-objs">
+        <div><span class="plan-hero-obj-label">Principal</span><span class="plan-hero-obj-val" id="planObjPrim">Salud</span></div>
+        <div><span class="plan-hero-obj-label">Secundario</span><span class="plan-hero-obj-val" id="planObjSec">Estructuración Física</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">✓ Permitidos</div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🥦 Vegetales</div>
+      <div class="plan-tags" id="planVegetales"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🥗 Ensaladas</div>
+      <div class="plan-tags" id="planEnsaladas"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🍗 Proteínas</div>
+      <div class="plan-tags" id="planProteinas"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🥪 Proteínas rebanadas</div>
+      <div class="plan-tags" id="planProtRebanadas"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🥔 Tubérculos</div>
+      <div class="plan-tags" id="planTuberculos"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">☕ Bebidas</div>
+      <div class="plan-tags" id="planBebidas"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🌿 Especias</div>
+      <div class="plan-tags" id="planEspecias"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">🫒 Aceites para cocinar</div>
+      <div class="plan-tags" id="planAceites"></div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-card-title">😌 Si hay ansiedad</div>
+      <div class="plan-tags" id="planAnsiedad"></div>
+    </div>
+
+    <div class="section-label">✕ Evitar</div>
+    <div class="plan-card plan-card-danger">
+      <div class="plan-tags" id="planEvitar"></div>
+    </div>
+
+    <div class="section-label">☆ Comida libre</div>
+    <div class="plan-card">
+      <div class="plan-libre" id="planLibre">—</div>
+    </div>
+
+    <div style="text-align:center; margin-top: 30px; padding: 24px 0; border-top: 1px solid var(--border);">
+      <p style="font-family: 'Lora', serif; font-style: italic; font-size: 13px; color: var(--text-dim);">"Conozca el plan de memoria. Ahí empieza la fidelidad."</p>
+      <p style="font-size: 10px; letter-spacing: 0.2em; color: var(--gold); margin-top: 8px;">@CHICHOQV</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg"></div>
+<div class="modal" id="modal">
+  <div class="modal-handle"></div>
+  <div class="modal-icon" id="modalIcon">🍳</div>
+  <div class="modal-title" id="modalTitle">—</div>
+  <div class="modal-time" id="modalTime">—</div>
+
+  <div class="modal-section">
+    <div class="modal-section-label">Su plan permite</div>
+    <ul class="modal-options" id="modalOptions"></ul>
+  </div>
+
+  <div class="modal-section" id="modalTipBox">
+    <div class="modal-section-label">Tip</div>
+    <div class="modal-tip" id="modalTip">—</div>
+  </div>
+
+  <div class="modal-section" id="modalNotasBox">
+    <div class="modal-section-label">Notas</div>
+    <ul class="modal-notas" id="modalNotas"></ul>
+  </div>
+
+  <div class="modal-q-bottom">¿Cómo le fue?</div>
+  <div class="status-grid">
+    <button class="status-btn fiel" data-st="fiel">
+      <span class="status-btn-icon">✓</span><span>Fiel</span>
+    </button>
+    <button class="status-btn parcial" data-st="parcial">
+      <span class="status-btn-icon">~</span><span>Parcial</span>
+    </button>
+    <button class="status-btn nofiel" data-st="nofiel">
+      <span class="status-btn-icon">✕</span><span>No fiel</span>
+    </button>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-clear" id="btnClear">Quitar</button>
+    <button class="btn btn-prim" id="btnSave">Guardar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Guardado</div>
+
+<script>
+// === ERROR HANDLER GLOBAL ===
+// Capturar errores silenciosos del sandbox del navegador
+window.addEventListener('error', function(e) {
+  // Si el error viene del API de notificaciones en sandbox, lo silenciamos
+  if (e.message && e.message.toLowerCase().includes('notification')) {
+    e.preventDefault();
+    return true;
+  }
+  // Otros errores: los logueamos pero no rompemos la app
+  console.warn('[PM] Error capturado:', e.message);
+  e.preventDefault();
+  return true;
+}, true);
+
+window.addEventListener('unhandledrejection', function(e) {
+  console.warn('[PM] Promesa rechazada:', e.reason);
+  e.preventDefault();
+});
+
+// Detectar si estamos en un iframe sandbox que bloquea Notification
+let NOTIF_DISPONIBLE = false;
+try {
+  if (typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function') {
+    NOTIF_DISPONIBLE = true;
+  }
+} catch (e) {
+  NOTIF_DISPONIBLE = false;
+}
+
+// === DATA — Plan FODMAP completo extraído por IA ===
+
+// === Especificaciones del plan (la lista del inicio del PDF) ===
+const PLAN_INFO = {
+  metodologia: 'FODMAP',
+  objetivoPrincipal: 'Salud',
+  objetivoSecundario: 'Estructuración Física',
+  comidaLibre: '1 comida libre por semana — eliminar meriendas del día (sin azúcar)',
+  permitidos: {
+    vegetales: ['Vainicas', 'Zuquini', 'Berenjena', 'Chayote', 'Ayote tierno'],
+    ensaladas: ['Pepino', 'Tomate', 'Palmito'],
+    proteinas: ['Huevos', 'Pollo', 'Pescados de mar: dorado, róbalo, corvina, pargo', 'Atún en lata Sardimar (en agua)', 'Tilapia St. Peters', 'Hongos'],
+    proteinasRebanadas: ['Roast Beef Dietz & Watson', 'Pastrami Dietz & Watson', 'Pavo rebanado Dietz & Watson', 'Pavo Member Selection (Pricemart)', 'Jamón Castillo de Roble', 'Jamón Black Forest', 'Jamones sin proteína de soya', 'Jamones Great Value'],
+    bebidas: ['Agua', 'Café', 'Té', 'Agua con limón', 'Soda con limón', 'Bebidas 0 azúcar (máx 3 v/sem)'],
+    especias: ['Cebolla', 'Chile', 'Culantro', 'Ajo', 'Perejil', 'Pimienta', 'Sal', 'Orégano', 'Romero', 'Tomillo'],
+    tuberculos: ['Papa', 'Yuca', 'Camote', 'Ñame', 'Tiquisque', 'Ñampí', 'Zanahoria', 'Remolacha'],
+    aceites: ['Aceite de oliva', 'Aceite de aguacate', 'Sin aceite'],
+    snacksAnsiedad: ['1 taza gelatina dietex', '1 flan dietex', '1 sobre suspiros sweet well', '1 taza palomitas saladas']
+  },
+  evitar: ['Azúcar', 'Edulcorantes', 'Pastas', 'Panes (no masa madre)', 'Gaseosas', 'Lácteos', 'Hojas verdes', 'Leguminosas', 'Maní', 'Pescados cultivados (tilapia, trucha, salmón chileno, corvineta, pángasio)']
+};
+
+// Plan base (las 7 comidas del día normal — FODMAP)
+const COMIDAS = [
+  {
+    id: 'despertar',
+    icon: '🌅',
+    time: '6:30 AM',
+    title: 'Al despertar',
+    detail: '150g de frutas rojas + ½ scoop AMP en agua',
+    opciones: [
+      '150g fresas + ½ scoop AMP en agua',
+      '150g arándanos + ½ scoop AMP en agua',
+      '150g moras + ½ scoop AMP en agua'
+    ],
+    tip: 'Activa el metabolismo. Tómelo apenas se levante, antes del café.',
+    notas: ['Solo ½ scoop, no entero']
+  },
+  {
+    id: 'desayuno',
+    icon: '🍳',
+    time: '8:30 AM',
+    title: 'Desayuno',
+    detail: 'Proteína + carbo (FODMAP) + bebida caliente',
+    opciones: [
+      '1 huevo + 2 claras + 2 reb. proteína + 6 tortillas',
+      '1 huevo + 2 claras + 50g proteína + 120g pan masa madre',
+      '60g claras + 2 reb. proteína + 240g plátano o tubérculos',
+      '160g proteína + 6 tortillas',
+      '160g proteína + 120g pan masa madre',
+      '160g proteína + 240g plátano o tubérculos'
+    ],
+    tip: 'Acompañe con 1 taza de bebida caliente (café o té).',
+    notas: [
+      'Cocinar con aceite de oliva, aguacate o sin aceite',
+      'Tomar suplementos AM aquí'
+    ]
+  },
+  {
+    id: 'merienda10',
+    icon: '🍓',
+    time: '10:00 AM',
+    title: 'Merienda AM',
+    detail: '200g de fruta libre',
+    opciones: [
+      '200g fresas',
+      '200g arándanos',
+      '200g moras',
+      '200g manzana verde',
+      '200g pera verde',
+      '200g guayaba verde',
+      '200g uvas verdes',
+      '200g mandarina',
+      '200g kiwi',
+      '200g pitaya'
+    ],
+    tip: 'Frutas FODMAP-friendly. Eligiendo verde mantiene digestión limpia.',
+    notas: ['Evite frutas maduras o muy dulces']
+  },
+  {
+    id: 'almuerzo',
+    icon: '🍖',
+    time: '12:00 PM',
+    title: 'Almuerzo',
+    detail: '150g proteína + vegetales + ensalada + 250g carbo',
+    opciones: [
+      '150g proteína + vegetales + ensalada + 250g plátano',
+      '150g proteína + vegetales + ensalada + 250g tubérculos',
+      '150g proteína + vegetales + ensalada + 250g arroz',
+      '150g proteína + vegetales + ensalada + 250g quinoa',
+      '150g proteína + vegetales + ensalada + 250g pasta GF'
+    ],
+    tip: '150g cruda equivale a 120g cocida. Pese antes de cocinar.',
+    notas: [
+      'Proteínas: pollo, pescado de mar, huevos, hongos',
+      'Vegetales: vainicas, zuquini, berenjena, chayote',
+      'Ensalada: pepino, tomate, palmito (FODMAP)',
+      'Sin lácteos, sin hojas verdes, sin leguminosas'
+    ]
+  },
+  {
+    id: 'merienda3',
+    icon: '🥪',
+    time: '3:00 PM',
+    title: 'Merienda 3 PM',
+    detail: 'Carbo + proteína (FODMAP)',
+    opciones: [
+      '2 tortillas + 50g proteína (o 2 rebanadas)',
+      '40g pan masa madre + 50g proteína',
+      '1 sanissimo + 50g proteína',
+      '2 tortillas + 2 rebanadas de proteína',
+      '40g pan masa madre + 2 rebanadas de proteína'
+    ],
+    tip: 'Es la merienda más vulnerable a saltarse. Téngala lista desde la mañana.',
+    notas: [
+      'Proteínas rebanadas ideales: Roast Beef, Pastrami, Pavo Dietz & Watson',
+      'Si hay ansiedad: 1 taza palomitas saladas o gelatina dietex'
+    ]
+  },
+  {
+    id: 'merienda5',
+    icon: '🥪',
+    time: '5:00 PM',
+    title: 'Merienda 5 PM',
+    detail: 'Mismas opciones que la merienda de 3 PM',
+    opciones: [
+      '2 tortillas + 50g proteína (o 2 rebanadas)',
+      '40g pan masa madre + 50g proteína',
+      '1 sanissimo + 50g proteína',
+      '2 tortillas + 2 rebanadas de proteína'
+    ],
+    tip: 'Cierra el ayuno antes de la cena. Mantiene la saciedad.',
+    notas: ['Eliminar las meriendas el día de la comida libre']
+  },
+  {
+    id: 'cena',
+    icon: '🍽️',
+    time: '7:30 PM',
+    title: 'Cena',
+    detail: '150g proteína + vegetales + ensalada + 250g carbo',
+    opciones: [
+      '150g proteína + vegetales + ensalada + 250g plátano',
+      '150g proteína + vegetales + ensalada + 250g tubérculos',
+      '150g proteína + vegetales + ensalada + 250g arroz',
+      '150g proteína + vegetales + ensalada + 250g quinoa',
+      '150g proteína + vegetales + ensalada + 250g pasta GF'
+    ],
+    tip: 'Igual que el almuerzo. Si entrenó tarde, priorice los carbos cocidos.',
+    notas: [
+      'Evitar terminar muy tarde — idealmente 3h antes de dormir',
+      'Tomar Ashwagandha antes de dormir'
+    ]
+  }
+];
+
+// === Comidas/momentos de día de ENTRENO ===
+const COMIDAS_ENTRENO = [
+  {
+    id: 'pre-entreno',
+    icon: '🏋️',
+    time: 'PRE',
+    title: 'Pre-entreno',
+    detail: '1 scoop Total War + 200g fruta libre + 2 galletas arroz + 10g miel',
+    opciones: [
+      '1 scoop Total War + 200g fresas + 2 galletas arroz + 10g miel',
+      '1 scoop Total War + 200g arándanos + 2 galletas arroz + 10g jalea',
+      '1 scoop Total War + 200g manzana verde + 2 galletas arroz + 10g miel',
+      '1 scoop Total War + 200g uvas verdes + 2 galletas arroz + 10g miel'
+    ],
+    tip: '30-45 min antes del entreno. La miel da energía rápida disponible.',
+    notas: [
+      'Tomar Menaxol/Actein 600mg también antes de entrenar',
+      'Combinar con 200ml extracto de remolacha si tiene'
+    ]
+  },
+  {
+    id: 'durante-60',
+    icon: '⏱️',
+    time: 'CADA 60 MIN',
+    title: 'Durante el entreno',
+    detail: '100g de fruta libre cada 60 min de entreno',
+    opciones: [
+      '100g fresas',
+      '100g arándanos',
+      '100g uvas verdes',
+      '100g manzana verde',
+      '100g kiwi',
+      '100g mandarina'
+    ],
+    tip: 'Solo si el entreno pasa de 60 min. Mantiene glucosa estable.',
+    notas: ['Eligir frutas fáciles de comer entre series']
+  },
+  {
+    id: 'hidratacion-intra',
+    icon: '💧',
+    time: 'CADA 90 MIN',
+    title: 'Hidratación intra',
+    detail: '1 scoop amino energy + 1 scoop 22ers en 750ml agua',
+    opciones: ['1 scoop amino energy + 1 scoop 22ers isotónico en 750ml agua'],
+    tip: 'Cada 90 min de entreno. Repone electrolitos y aminoácidos.',
+    notas: [
+      'Adicional al agua + sal del día',
+      'Crítico en entrenos largos o con calor'
+    ]
+  },
+  {
+    id: 'post-entreno',
+    icon: '🥤',
+    time: 'POST',
+    title: 'Post-entreno',
+    detail: '1 scoop AMP Advanced en agua',
+    opciones: ['1 scoop completo de proteína AMP Advanced en agua'],
+    tip: 'Ventana anabólica: dentro de 30 min después de terminar el entreno.',
+    notas: ['Solo agua, no leche']
+  }
+];
+
+// === Comidas de día de COMPETENCIA ===
+const COMIDAS_COMPETENCIA = [
+  {
+    id: 'pre-comp',
+    icon: '🏆',
+    time: '30 MIN ANTES',
+    title: 'Pre-competencia',
+    detail: '½ scoop Total War + 2 galletas arroz + 20g miel',
+    opciones: [
+      '½ scoop Total War + 2 galletas arroz + 20g miel de abeja',
+      '½ scoop Total War + 2 galletas arroz + 20g jalea'
+    ],
+    tip: 'Solo 30 min antes. Energía concentrada de rápida absorción.',
+    notas: ['Diferente del pre-entreno regular']
+  },
+  {
+    id: 'post-comp',
+    icon: '🎯',
+    time: 'POST',
+    title: 'Post-competencia',
+    detail: '100g fruta + 30g miel + ½ scoop whey en agua',
+    opciones: ['100g fruta libre + 30g miel + ½ scoop proteína whey en agua'],
+    tip: 'Recuperación completa: glucosa rápida + proteína para reparación.',
+    notas: ['Después de 24-48h en evento, rotar a plan normal']
+  }
+];
+
+// === Suplementos DIARIOS (todos los días) ===
+const SUPS_DIARIOS = [
+  {
+    id: 'agua',
+    icon: '💧',
+    time: 'TODO EL DÍA',
+    title: 'Agua + sal himalaya',
+    detail: '2L de agua + 2 sal + 1 servida hidratante',
+    opciones: ['2 litros de agua + 2 salt + 1 servida de hidratante'],
+    tip: 'Distribuir en el día. Crítico para electrolitos y rendimiento.',
+    notas: ['Sal himalaya rosa, no de mesa']
+  },
+  {
+    id: 'creatina',
+    icon: '💊',
+    time: 'AM',
+    title: 'Creatina',
+    detail: '10g monohidrato con el desayuno',
+    opciones: ['10g de creatina monohidrato en agua'],
+    tip: 'Tómela todos los días. La acumulación es la que cuenta.',
+    notas: ['No requiere fase de carga si la toma diariamente']
+  },
+  {
+    id: 'beta-alanina',
+    icon: '💊',
+    time: 'AM',
+    title: 'Beta alanina',
+    detail: '6g al día',
+    opciones: ['6g de beta alanina'],
+    tip: 'Mejora rendimiento en alta intensidad. Puede dar hormigueo (normal).',
+    notas: ['Dividir en 2 tomas si el hormigueo es muy fuerte']
+  },
+  {
+    id: 'citrulina',
+    icon: '💊',
+    time: 'AM',
+    title: 'Citrulina dl malato',
+    detail: '6g al día',
+    opciones: ['6g de citrulina dl malato'],
+    tip: 'Mejora flujo sanguíneo y reduce fatiga muscular.',
+    notas: ['Idealmente 30-60 min antes de actividad física']
+  },
+  {
+    id: 'newforton',
+    icon: '💉',
+    time: 'AM',
+    title: 'Newforton',
+    detail: '1 ampolla al día',
+    opciones: ['1 ampolla de Newforton'],
+    tip: 'Tomar como indica el médico tratante.',
+    notas: []
+  },
+  {
+    id: 'remolacha',
+    icon: '🍃',
+    time: 'AM',
+    title: 'Extracto de remolacha',
+    detail: '200ml o 1 scoop',
+    opciones: ['200ml de extracto de remolacha', '1 scoop de extracto de remolacha'],
+    tip: 'Óxido nítrico natural. Mejora resistencia y oxigenación.',
+    notas: ['Tomar 60-90 min antes del entreno para máximo efecto']
+  },
+  {
+    id: 'ashwagandha',
+    icon: '🌿',
+    time: 'PM',
+    title: 'Ashwagandha',
+    detail: '1 cápsula antes de dormir',
+    opciones: ['1 cápsula de Ashwagandha'],
+    tip: 'Reduce cortisol, mejora calidad del sueño y recuperación.',
+    notas: ['30 min antes de acostarse']
+  }
+];
+
+// === Suplementos solo en día de ENTRENO ===
+const SUPS_ENTRENO = [
+  {
+    id: 'menaxol',
+    icon: '💊',
+    time: 'ANTES',
+    title: 'Menaxol o Actein',
+    detail: '600mg antes de entrenar',
+    opciones: ['600mg de Menaxol antes de entrenar', '600mg de Actein antes de entrenar'],
+    tip: '30-45 min antes del entreno. Junto con el pre-entreno.',
+    notas: ['Solo en días de entreno']
+  }
+];
+
+// Helpers — qué items mostrar según el modo del día
+function getItemsForMode(mode) {
+  if (mode === 'entreno') {
+    return [...COMIDAS, ...COMIDAS_ENTRENO, ...SUPS_DIARIOS, ...SUPS_ENTRENO];
+  } else if (mode === 'competencia') {
+    return [...COMIDAS, ...COMIDAS_COMPETENCIA, ...SUPS_DIARIOS, ...SUPS_ENTRENO];
+  } else {
+    return [...COMIDAS, ...SUPS_DIARIOS];
+  }
+}
+
+// Mantener compatibilidad con código antiguo
+const SUPS = SUPS_DIARIOS;
+const ALL = [...COMIDAS, ...SUPS_DIARIOS];
+
+// === STATE ===
+const KEY = 'pm_demo_v3';
+let state = { checks: {} };
+
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function load() {
+  try { state = JSON.parse(localStorage.getItem(KEY)) || { checks: {} }; }
+  catch { state = { checks: {} }; }
+}
+
+// === FLOW ===
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+document.getElementById('startBtn').addEventListener('click', startExtract);
+
+async function startExtract() {
+  show('screen-extract');
+  const steps = document.querySelectorAll('.extract-step');
+  for (let i = 0; i < steps.length; i++) {
+    steps[i].classList.add('active');
+    steps[i].querySelector('.extract-step-icon').textContent = '→';
+    await sleep(650 + Math.random() * 250);
+    steps[i].classList.remove('active');
+    steps[i].classList.add('done');
+    steps[i].querySelector('.extract-step-icon').textContent = '✓';
+  }
+  await sleep(400);
+  show('screen-review');
+}
+
+document.getElementById('confirmBtn').addEventListener('click', () => {
+  // Si no hay datos previos, generar 30 días simulados para el demo
+  if (!state.history) {
+    state.history = generateSimulatedHistory();
+    save();
+  }
+  show('screen-app');
+  renderApp();
+  renderDashboard();
+});
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// === MODO DEL DÍA ===
+function getTodayDayOfWeek() {
+  return new Date().getDay(); // 0=Domingo, 1=Lunes...6=Sábado
+}
+
+function getSuggestedMode() {
+  // Lun-Sáb (1-6) = entreno, Domingo (0) = descanso
+  const dow = getTodayDayOfWeek();
+  return dow === 0 ? 'descanso' : 'entreno';
+}
+
+function getCurrentMode() {
+  // Si el usuario explícitamente eligió un modo hoy, usar ese
+  // Si no, usar el sugerido
+  const todayKey = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  if (state.modes && state.modes[todayKey]) {
+    return state.modes[todayKey];
+  }
+  return getSuggestedMode();
+}
+
+function setMode(mode) {
+  const todayKey = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  if (!state.modes) state.modes = {};
+  state.modes[todayKey] = mode;
+  save();
+  renderApp();
+}
+
+// === MODE BUTTONS ===
+function renderModeSelector() {
+  const current = getCurrentMode();
+  const suggested = getSuggestedMode();
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    const mode = btn.dataset.mode;
+    btn.classList.toggle('active', mode === current);
+    btn.classList.toggle('suggested', mode === suggested && mode !== current);
+  });
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setMode(btn.dataset.mode);
+  });
+});
+
+// === RENDER MI PLAN ===
+function renderMiPlan() {
+  document.getElementById('planMetodologia').textContent = PLAN_INFO.metodologia;
+  document.getElementById('planObjPrim').textContent = PLAN_INFO.objetivoPrincipal;
+  document.getElementById('planObjSec').textContent = PLAN_INFO.objetivoSecundario;
+
+  const renderTags = (id, items, danger = false) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = items.map(t =>
+      `<span class="plan-tag ${danger ? 'plan-tag-danger' : ''}">${t}</span>`
+    ).join('');
+  };
+
+  renderTags('planVegetales', PLAN_INFO.permitidos.vegetales);
+  renderTags('planEnsaladas', PLAN_INFO.permitidos.ensaladas);
+  renderTags('planProteinas', PLAN_INFO.permitidos.proteinas);
+  renderTags('planProtRebanadas', PLAN_INFO.permitidos.proteinasRebanadas);
+  renderTags('planTuberculos', PLAN_INFO.permitidos.tuberculos);
+  renderTags('planBebidas', PLAN_INFO.permitidos.bebidas);
+  renderTags('planEspecias', PLAN_INFO.permitidos.especias);
+  renderTags('planAceites', PLAN_INFO.permitidos.aceites);
+  renderTags('planAnsiedad', PLAN_INFO.permitidos.snacksAnsiedad);
+  renderTags('planEvitar', PLAN_INFO.evitar, true);
+  document.getElementById('planLibre').textContent = PLAN_INFO.comidaLibre;
+}
+
+// === RENDER APP ===
+function renderApp() {
+  // Date
+  const d = new Date();
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  document.getElementById('appDate').textContent = `${dias[d.getDay()]} · ${d.getDate()} ${meses[d.getMonth()]}`;
+
+  // Modo del día
+  const mode = getCurrentMode();
+  renderModeSelector();
+
+  // Comidas base (las 7 siempre)
+  document.getElementById('comidasList').innerHTML = '';
+  COMIDAS.forEach(c => addCard(c, 'comidasList'));
+
+  // Comidas adicionales según modo
+  const entrenoSection = document.getElementById('entrenoSection');
+  const entrenoList = document.getElementById('entrenoList');
+  const entrenoLabel = document.getElementById('entrenoSectionLabel');
+  if (mode === 'entreno') {
+    entrenoSection.style.display = 'block';
+    entrenoLabel.textContent = 'Pre / Durante / Post entreno';
+    entrenoList.innerHTML = '';
+    COMIDAS_ENTRENO.forEach(c => addCard(c, 'entrenoList'));
+  } else if (mode === 'competencia') {
+    entrenoSection.style.display = 'block';
+    entrenoLabel.textContent = 'Pre / Post competencia';
+    entrenoList.innerHTML = '';
+    COMIDAS_COMPETENCIA.forEach(c => addCard(c, 'entrenoList'));
+  } else {
+    entrenoSection.style.display = 'none';
+  }
+
+  // Suplementos diarios
+  document.getElementById('supList').innerHTML = '';
+  SUPS_DIARIOS.forEach(s => addCard(s, 'supList'));
+
+  // Suplementos de entreno (solo en modo entreno o competencia)
+  const supEntrenoSection = document.getElementById('supEntrenoSection');
+  const supEntrenoList = document.getElementById('supEntrenoList');
+  if (mode === 'entreno' || mode === 'competencia') {
+    supEntrenoSection.style.display = 'block';
+    supEntrenoList.innerHTML = '';
+    SUPS_ENTRENO.forEach(s => addCard(s, 'supEntrenoList'));
+  } else {
+    supEntrenoSection.style.display = 'none';
+  }
+
+  updateScore();
+}
+
+function addCard(item, containerId) {
+  const check = state.checks[item.id];
+  const cls = check?.status || '';
+  const icon = check?.status === 'fiel' ? '✓' : check?.status === 'parcial' ? '~' : check?.status === 'nofiel' ? '✕' : '';
+
+  const card = document.createElement('div');
+  card.className = `check-card ${cls}`;
+  card.innerHTML = `
+    <div class="check-icon">${item.icon}</div>
+    <div class="check-body">
+      <div class="check-time">${item.time}</div>
+      <div class="check-title">${item.title}</div>
+      <div class="check-detail">${item.detail}</div>
+    </div>
+    <div class="check-status">${icon}</div>
+  `;
+  card.addEventListener('click', () => openModal(item));
+  document.getElementById(containerId).appendChild(card);
+}
+
+function updateScore() {
+  const mode = getCurrentMode();
+  const items = getItemsForMode(mode);
+  let pts = 0;
+  items.forEach(it => {
+    const c = state.checks[it.id];
+    if (c?.status === 'fiel') pts += 1;
+    else if (c?.status === 'parcial') pts += 0.5;
+  });
+  const pct = items.length > 0 ? Math.round((pts / items.length) * 100) : 0;
+  const ring = document.getElementById('ringFg');
+  ring.style.strokeDashoffset = 169.6 - (pct / 100) * 169.6;
+  document.getElementById('ringPct').textContent = pct + '%';
+  document.getElementById('scoreDetail').textContent = `${pts} de ${items.length} completados`;
+
+  let stroke = 'var(--gold)', label = 'Construya su día';
+  if (pct === 100) { stroke = 'var(--green)'; label = 'Día perfecto.'; }
+  else if (pct >= 80) { stroke = 'var(--green)'; label = 'Está siendo fiel.'; }
+  else if (pct >= 50) { label = 'Vamos bien.'; }
+  else if (pct > 0) { stroke = 'var(--amber)'; label = 'Sigamos.'; }
+  ring.style.stroke = stroke;
+  document.getElementById('scoreLabel').textContent = label;
+}
+
+// === MODAL ===
+let cur = null, curSt = null;
+
+function openModal(item) {
+  cur = item;
+  const ex = state.checks[item.id];
+  curSt = ex?.status || null;
+  document.getElementById('modalIcon').textContent = item.icon;
+  document.getElementById('modalTitle').textContent = item.title;
+  document.getElementById('modalTime').textContent = item.time;
+
+  // Opciones del plan
+  const opts = document.getElementById('modalOptions');
+  opts.innerHTML = (item.opciones || []).map(o => `<li>${o}</li>`).join('');
+
+  // Tip
+  const tipBox = document.getElementById('modalTipBox');
+  if (item.tip) {
+    tipBox.style.display = 'block';
+    document.getElementById('modalTip').textContent = item.tip;
+  } else {
+    tipBox.style.display = 'none';
+  }
+
+  // Notas
+  const notasBox = document.getElementById('modalNotasBox');
+  if (item.notas && item.notas.length) {
+    notasBox.style.display = 'block';
+    document.getElementById('modalNotas').innerHTML = item.notas.map(n => `<li>${n}</li>`).join('');
+  } else {
+    notasBox.style.display = 'none';
+  }
+
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.toggle('selected', b.dataset.st === curSt));
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('modalBg').classList.add('show');
+  document.getElementById('modal').scrollTop = 0;
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('modalBg').classList.remove('show');
+  cur = null; curSt = null;
+}
+
+document.querySelectorAll('.status-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    curSt = b.dataset.st;
+    document.querySelectorAll('.status-btn').forEach(x => x.classList.toggle('selected', x === b));
+  });
+});
+
+document.getElementById('btnSave').addEventListener('click', () => {
+  if (!cur || !curSt) { toast('Seleccione un estado'); return; }
+  state.checks[cur.id] = { status: curSt };
+  save();
+  closeModal();
+  renderApp();
+  toast('✓ Guardado');
+});
+
+document.getElementById('btnClear').addEventListener('click', () => {
+  if (!cur) return;
+  delete state.checks[cur.id];
+  save();
+  closeModal();
+  renderApp();
+  toast('Quitado');
+});
+
+document.getElementById('modalBg').addEventListener('click', closeModal);
+
+// === RESTART ===
+document.getElementById('restartBtn').addEventListener('click', () => {
+  localStorage.removeItem(KEY);
+  state = { checks: {} };
+  // Reset extract steps
+  document.querySelectorAll('.extract-step').forEach(s => {
+    s.classList.remove('active', 'done');
+    s.querySelector('.extract-step-icon').textContent = '·';
+  });
+  // Reset banner y tabs
+  const banner = document.getElementById('successBanner');
+  if (banner) banner.style.display = '';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'hoy'));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-hoy'));
+  show('screen-landing');
+});
+
+// === TOAST ===
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 1700);
+}
+
+// === TABS ===
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const view = btn.dataset.view;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    if (view === 'dashboard') {
+      renderDashboard();
+      const banner = document.getElementById('successBanner');
+      if (banner) banner.style.display = 'none';
+    } else if (view === 'plan') {
+      renderMiPlan();
+      const banner = document.getElementById('successBanner');
+      if (banner) banner.style.display = 'none';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// === DATOS SIMULADOS DEMO (30 días) ===
+function generateSimulatedHistory() {
+  const history = {};
+  const today = new Date();
+
+  // Patrón realista: usuario en su segunda semana, mejorando.
+  // Difícil consistente: merienda 5pm y merienda 3pm.
+  // Bueno: desayuno y cena.
+  // Domingos malos (comida libre/social), miércoles flojo (largo día).
+
+  const fidelidadPorComida = {
+    despertar: 0.85,
+    desayuno: 0.92,
+    merienda10: 0.78,
+    almuerzo: 0.88,
+    merienda3: 0.55,   // ← talón de Aquiles 1
+    merienda5: 0.48,   // ← talón de Aquiles 2 (peor)
+    cena: 0.90,
+    creatina: 0.95,
+    agua: 0.70,
+    derovit: 0.93
+  };
+
+  const factorDia = {
+    0: 0.65,   // Domingo (libre)
+    1: 0.92,   // Lunes (renovado)
+    2: 0.88,   // Martes
+    3: 0.72,   // Miércoles (flojo)
+    4: 0.85,   // Jueves
+    5: 0.78,   // Viernes
+    6: 0.80    // Sábado
+  };
+
+  for (let daysAgo = 29; daysAgo >= 0; daysAgo--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - daysAgo);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dow = d.getDay();
+    const dayFactor = factorDia[dow];
+
+    // Tendencia: mejora con el tiempo
+    const trendFactor = 0.85 + (29 - daysAgo) / 200; // de 0.85 a 1.0
+
+    const checks = {};
+    ALL.forEach(item => {
+      const baseRate = fidelidadPorComida[item.id] || 0.8;
+      const finalRate = baseRate * dayFactor * trendFactor;
+      const r = Math.random();
+      if (r < finalRate) checks[item.id] = { status: 'fiel' };
+      else if (r < finalRate + 0.15) checks[item.id] = { status: 'parcial' };
+      else if (r < finalRate + 0.30) checks[item.id] = { status: 'nofiel' };
+      // El resto sin marcar
+    });
+
+    history[key] = { checks };
+  }
+
+  // Día de hoy: dejarlo más vacío para que el usuario lo construya
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  history[todayKey] = { checks: {} };
+
+  return history;
+}
+
+// === DASHBOARD CALCS ===
+function calcDayPct(dayChecks) {
+  if (!dayChecks) return 0;
+  let pts = 0;
+  ALL.forEach(it => {
+    const c = dayChecks[it.id];
+    if (c?.status === 'fiel') pts += 1;
+    else if (c?.status === 'parcial') pts += 0.5;
+  });
+  return Math.round((pts / ALL.length) * 100);
+}
+
+function getHistoryWithToday() {
+  const hist = { ...(state.history || {}) };
+  // Sobreescribe el día actual con los checks de state.checks
+  const todayKey = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  hist[todayKey] = { checks: state.checks || {} };
+  return hist;
+}
+
+function renderDashboard() {
+  const hist = getHistoryWithToday();
+  const keys = Object.keys(hist).sort();
+
+  // === Avg 30 días ===
+  let totalSum = 0, totalCount = 0;
+  keys.forEach(k => {
+    const pct = calcDayPct(hist[k].checks);
+    if (pct > 0) { totalSum += pct; totalCount++; }
+  });
+  const avg = totalCount > 0 ? Math.round(totalSum / totalCount) : 0;
+  document.getElementById('dashAvg').textContent = avg + '%';
+
+  // === Trend: últimos 7 vs anteriores 7 ===
+  const last7 = keys.slice(-7);
+  const prev7 = keys.slice(-14, -7);
+  const avg7 = average(last7.map(k => calcDayPct(hist[k].checks)).filter(p => p > 0));
+  const avgPrev7 = average(prev7.map(k => calcDayPct(hist[k].checks)).filter(p => p > 0));
+  const diff = Math.round(avg7 - avgPrev7);
+  const trendEl = document.getElementById('dashTrend');
+  if (diff > 0) {
+    trendEl.textContent = `↑ ${diff}% vs semana anterior`;
+    trendEl.classList.remove('down');
+  } else if (diff < 0) {
+    trendEl.textContent = `↓ ${Math.abs(diff)}% vs semana anterior`;
+    trendEl.classList.add('down');
+  } else {
+    trendEl.textContent = '= igual que la semana pasada';
+    trendEl.classList.remove('down');
+  }
+
+  // === Stats ===
+  // Racha actual (días consecutivos con >=50%)
+  let streak = 0;
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const pct = calcDayPct(hist[keys[i]].checks);
+    if (pct >= 50) streak++;
+    else if (i < keys.length - 1) break;
+    else break;
+  }
+  document.getElementById('dashStreak').textContent = streak;
+
+  // Mejor día
+  let best = 0;
+  keys.forEach(k => { const pct = calcDayPct(hist[k].checks); if (pct > best) best = pct; });
+  document.getElementById('dashBest').textContent = best + '%';
+
+  // Días perfectos (>=90)
+  const perfect = keys.filter(k => calcDayPct(hist[k].checks) >= 90).length;
+  document.getElementById('dashPerfect').textContent = perfect;
+
+  // === Hard meals (peor a mejor por % de fallo) ===
+  // Solo COMIDAS, no suplementos ni agua (esos van en otra sección)
+  const mealStats = COMIDAS.map(item => {
+    let total = 0, fiel = 0, parcial = 0;
+    keys.forEach(k => {
+      const c = hist[k].checks[item.id];
+      if (c) {
+        total++;
+        if (c.status === 'fiel') fiel++;
+        else if (c.status === 'parcial') parcial++;
+      }
+    });
+    const pct = total > 0 ? Math.round((fiel + parcial * 0.5) / total * 100) : 0;
+    return { ...item, fidelidadPct: pct, total };
+  })
+  .filter(m => m.total > 3)
+  .sort((a, b) => a.fidelidadPct - b.fidelidadPct);
+
+  const hardList = document.getElementById('hardMealsList');
+  hardList.innerHTML = mealStats.slice(0, 5).map((m, i) => {
+    let cls = 'ok';
+    if (m.fidelidadPct < 60) cls = 'danger';
+    else if (m.fidelidadPct < 80) cls = 'warn';
+    return `
+      <div class="hard-meal">
+        <div class="hard-meal-rank">${i + 1}</div>
+        <div class="hard-meal-icon">${m.icon}</div>
+        <div class="hard-meal-body">
+          <div class="hard-meal-name">${m.title}</div>
+          <div class="hard-meal-bar-wrap">
+            <div class="hard-meal-bar ${cls}" style="width: ${m.fidelidadPct}%;"></div>
+          </div>
+        </div>
+        <div class="hard-meal-pct ${cls}">${m.fidelidadPct}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // === Week pattern ===
+  const dayNames = ['Domingos', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábados'];
+  const dayNamesShort = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const dayStats = [0, 1, 2, 3, 4, 5, 6].map(dow => {
+    const pcts = keys.filter(k => new Date(k + 'T00:00:00').getDay() === dow)
+                     .map(k => calcDayPct(hist[k].checks))
+                     .filter(p => p > 0);
+    return {
+      dow,
+      name: dayNames[dow],
+      nameShort: dayNamesShort[dow],
+      avg: pcts.length > 0 ? Math.round(average(pcts)) : 0
+    };
+  });
+  const maxDayAvg = Math.max(...dayStats.map(d => d.avg));
+
+  document.getElementById('weekPattern').innerHTML = dayStats.map(d => {
+    let cls = 'bad';
+    if (d.avg === maxDayAvg && d.avg > 0) cls = 'best';
+    else if (d.avg >= 80) cls = 'good';
+    else if (d.avg >= 60) cls = 'mid';
+    return `
+      <div class="week-row">
+        <div class="week-day">${d.nameShort}</div>
+        <div class="week-bar-wrap">
+          <div class="week-bar ${cls}" style="width: ${d.avg}%;"></div>
+        </div>
+        <div class="week-pct">${d.avg}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // === Heatmap (30 cuadros) ===
+  const heat = document.getElementById('heatmap');
+  const todayK = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  heat.innerHTML = keys.map(k => {
+    const pct = calcDayPct(hist[k].checks);
+    let lvl = 0;
+    if (pct >= 90) lvl = 4;
+    else if (pct >= 70) lvl = 3;
+    else if (pct >= 50) lvl = 2;
+    else if (pct > 0) lvl = 1;
+    const isToday = k === todayK;
+    const date = new Date(k + 'T00:00:00');
+    return `<div class="heat-cell ${lvl > 0 ? 'lvl-' + lvl : ''} ${isToday ? 'today' : ''}" title="${k}: ${pct}%"></div>`;
+  }).join('');
+
+  // === IA Insight ===
+  generateIAInsight(mealStats, dayStats, avg, diff);
+}
+
+function average(arr) {
+  if (arr.length === 0) return 0;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function generateIAInsight(mealStats, dayStats, avg, trend) {
+  const worstMeal = mealStats[0];
+  const bestDay = [...dayStats].sort((a, b) => b.avg - a.avg)[0];
+  const worstDay = [...dayStats].filter(d => d.avg > 0).sort((a, b) => a.avg - b.avg)[0];
+
+  const insights = [];
+
+  // Trend
+  if (trend > 5) {
+    insights.push(`Subió <strong>${trend}%</strong> respecto a la semana pasada — está en ascenso.`);
+  } else if (trend < -5) {
+    insights.push(`Bajó <strong>${Math.abs(trend)}%</strong> esta semana. Hora de retomar el control.`);
+  } else {
+    insights.push(`Mantiene un <strong>${avg}%</strong> de fidelidad estable.`);
+  }
+
+  // Worst meal
+  if (worstMeal && worstMeal.fidelidadPct < 70) {
+    insights.push(`Su mayor reto es <strong>${worstMeal.title}</strong> (${worstMeal.fidelidadPct}% fiel). Si la deja lista la noche anterior, sube al 90% en una semana.`);
+  }
+
+  // Day pattern
+  if (worstDay && bestDay && (bestDay.avg - worstDay.avg) > 15) {
+    insights.push(`Sus <em>${bestDay.name}</em> son su mejor día (${bestDay.avg}%) pero los <em>${worstDay.name}</em> caen al ${worstDay.avg}%. Replique la rutina del ${bestDay.name.replace(/s$/, '').toLowerCase()} ese día.`);
+  }
+
+  document.getElementById('iaText').innerHTML = insights.join(' ');
+}
+
+// === NOTIFICACIONES ===
+// Mensajes en 3 estilos que rotan
+const MENSAJES = {
+  despertar: [
+    { tono: 'discreto', texto: 'Al despertar · 6:30 AM' },
+    { tono: 'directo', texto: 'Primero el cuerpo. Antes del café, las frutas y el ½ scoop.' },
+    { tono: 'fe', texto: '"Las misericordias nuevas son cada mañana." Empiece bien.' }
+  ],
+  desayuno: [
+    { tono: 'discreto', texto: 'Desayuno · 8:30 AM' },
+    { tono: 'directo', texto: 'Hora del primer combate. Su versión campeona ya está en la cocina.' },
+    { tono: 'fe', texto: 'Romanos 4:17 — llame las cosas como si fueran. Su plato ya está hecho.' }
+  ],
+  merienda10: [
+    { tono: 'discreto', texto: 'Merienda · 10:00 AM' },
+    { tono: 'directo', texto: '1 scoop. 30 segundos. Sin excusas.' },
+    { tono: 'fe', texto: 'Pequeñas obediencias. Grande recompensa. Su scoop espera.' }
+  ],
+  almuerzo: [
+    { tono: 'discreto', texto: 'Almuerzo · 12:00 PM' },
+    { tono: 'directo', texto: 'Su almuerzo lo construye. La calle, lo destruye. Elija.' },
+    { tono: 'fe', texto: '"Todo lo puedo en Cristo que me fortalece." Incluso decir no a la frita.' }
+  ],
+  merienda3: [
+    { tono: 'discreto', texto: 'Merienda · 3:00 PM' },
+    { tono: 'directo', texto: 'Esta es la que más se le escapa. No hoy.' },
+    { tono: 'fe', texto: 'La fidelidad en lo poco abre puertas en lo mucho.' }
+  ],
+  merienda5: [
+    { tono: 'discreto', texto: 'Merienda · 5:00 PM' },
+    { tono: 'directo', texto: 'Cierre del día depende de esta merienda. Hágala.' },
+    { tono: 'fe', texto: 'Termine el día como empezó. Con propósito.' }
+  ],
+  cena: [
+    { tono: 'discreto', texto: 'Cena · 7:30 PM' },
+    { tono: 'directo', texto: 'Última jugada del día. Cierre fuerte.' },
+    { tono: 'fe', texto: '"Este es el día que hizo el Señor." Termínelo bien.' }
+  ],
+  creatina: [
+    { tono: 'discreto', texto: 'Creatina · 10g con el desayuno' },
+    { tono: 'directo', texto: 'La acumulación es la victoria. 10g. Todos los días.' },
+    { tono: 'fe', texto: 'Constancia en lo pequeño. 10g. Hoy también.' }
+  ],
+  derovit: [
+    { tono: 'discreto', texto: 'Derovit K · 1 cápsula' },
+    { tono: 'directo', texto: 'Vitamina D + K2. La base que sostiene todo.' },
+    { tono: 'fe', texto: 'El cuerpo es templo. Cuídelo en los detalles.' }
+  ],
+  agua: [
+    { tono: 'discreto', texto: 'Agua + sal himalaya' },
+    { tono: 'directo', texto: 'Si entrenó, ya perdió electrolitos. Reponga.' },
+    { tono: 'fe', texto: 'Agua. Vida. Reponga.' }
+  ]
+};
+
+const SEGUNDO_RECORDATORIO = {
+  despertar: '¿Aún no? Solo son las frutas. Vaya.',
+  desayuno: '30 minutos después. ¿Hizo check? El día se está construyendo.',
+  merienda10: 'Su scoop de 10 AM. Aún a tiempo.',
+  almuerzo: 'Su almuerzo no se va a comer solo. Vaya.',
+  merienda3: 'La merienda de las 3 lo está esperando. Sin excusas.',
+  merienda5: 'Esta es la que más se le escapa. No hoy. Marque check.',
+  cena: 'Su cena cierra el día. Hágalo.',
+  creatina: 'Creatina pendiente. 30 segundos. Hágalo.',
+  derovit: 'Derovit K pendiente.',
+  agua: 'Su agua con sal. Repongo.'
+};
+
+const TIMERS_KEY = 'pm_demo_timers';
+const NOTIF_STATE_KEY = 'pm_demo_notif_state';
+let scheduledTimers = [];
+
+function getNotifState() {
+  try { return JSON.parse(localStorage.getItem(NOTIF_STATE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setNotifState(s) { localStorage.setItem(NOTIF_STATE_KEY, JSON.stringify(s)); }
+
+function pickMessage(itemId) {
+  const opts = MENSAJES[itemId];
+  if (!opts) return { texto: itemId };
+  // Rota según el día del año + hash del itemId para que cada día diferente tono
+  const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+  const hash = itemId.charCodeAt(0) + itemId.length;
+  const idx = (day + hash) % opts.length;
+  return opts[idx];
+}
+
+function checkNotifSupport() {
+  if (!NOTIF_DISPONIBLE) {
+    return { ok: false, reason: 'Notificaciones no disponibles aquí.' };
+  }
+  return { ok: true };
+}
+
+function updateNotifBanner() {
+  const banner = document.getElementById('notifBanner');
+  if (!banner) return;
+  if (!NOTIF_DISPONIBLE) {
+    banner.style.display = 'none';
+    return;
+  }
+  const perm = Notification.permission;
+  const iconEl = banner.querySelector('.notif-banner-icon');
+  const titleEl = banner.querySelector('.notif-banner-title');
+  const descEl = banner.querySelector('.notif-banner-desc');
+  const btnEl = banner.querySelector('.notif-banner-btn');
+  if (!iconEl || !titleEl || !descEl || !btnEl) return;
+
+  if (perm === 'granted') {
+    banner.classList.add('success');
+    iconEl.textContent = '✓';
+    titleEl.textContent = 'Avisos activos';
+    descEl.textContent = 'Recibirá recordatorios a la hora de cada comida.';
+    btnEl.textContent = 'Probar';
+    btnEl.style.display = '';
+    btnEl.onclick = sendTestNotif;
+  } else if (perm === 'denied') {
+    banner.classList.remove('success');
+    iconEl.textContent = '🔕';
+    titleEl.textContent = 'Avisos bloqueados';
+    descEl.textContent = 'Active desde los ajustes de su navegador.';
+    btnEl.style.display = 'none';
+  } else {
+    // default — todavía no respondió
+    banner.classList.remove('success');
+    iconEl.textContent = '🔔';
+    titleEl.textContent = 'Active los avisos';
+    descEl.textContent = 'Recordatorios a la hora exacta de cada comida y suplemento.';
+    btnEl.textContent = 'Activar';
+    btnEl.style.display = '';
+    btnEl.onclick = requestNotifPermission;
+  }
+}
+
+async function requestNotifPermission() {
+  const support = checkNotifSupport();
+  if (!support.ok) {
+    toast(support.reason);
+    return;
+  }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      // Aviso de bienvenida
+      try {
+        new Notification('PerfectaMENTE Coach', {
+          body: 'Avisos activados. Su tablero le hablará a la hora exacta.',
+          tag: 'pm-welcome'
+        });
+      } catch (e) { console.warn('No se pudo enviar bienvenida:', e); }
+      scheduleAllNotifications();
+      updateNotifBanner();
+      toast('✓ Avisos activados');
+    } else {
+      toast('Permiso denegado');
+      updateNotifBanner();
+    }
+  } catch (e) {
+    console.warn('Error solicitando permiso:', e);
+    toast('No se pudo activar');
+  }
+}
+
+function sendTestNotif() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const items = [...COMIDAS, ...SUPS];
+  const item = items[Math.floor(Math.random() * items.length)];
+  const msg = pickMessage(item.id);
+  try {
+    new Notification(`${item.icon} ${item.title}`, {
+      body: msg.texto,
+      tag: 'pm-test'
+    });
+    toast('Aviso de prueba enviado');
+  } catch (e) {
+    console.warn('Error en test notif:', e);
+    toast('No se pudo enviar');
+  }
+}
+
+function clearAllTimers() {
+  scheduledTimers.forEach(t => clearTimeout(t));
+  scheduledTimers = [];
+}
+
+function scheduleAllNotifications() {
+  if (Notification.permission !== 'granted') return;
+  clearAllTimers();
+
+  const now = new Date();
+
+  // === Notificaciones de comidas + suplementos a su hora ===
+  ALL.forEach(item => {
+    if (item.id === 'agua') return; // Agua se maneja aparte cada 2h
+    if (!item.time) return;
+
+    // Parsear hora
+    const timeMatch = item.time.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (!timeMatch) return;
+    let h = parseInt(timeMatch[1]);
+    const m = parseInt(timeMatch[2]);
+    const period = (timeMatch[3] || '').toUpperCase();
+    if (period === 'PM' && h !== 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
+
+    // Para suplementos sin hora exacta (AM), usar 8:30 (con desayuno)
+    if (item.id === 'creatina' || item.id === 'derovit') {
+      h = 8; const m2 = 30;
+      scheduleNotif(item, h, m2, now);
+      return;
+    }
+
+    scheduleNotif(item, h, m, now);
+  });
+
+  // === Notificaciones de agua cada 2h entre 7 AM y 9 PM ===
+  const waterItem = SUPS.find(s => s.id === 'agua');
+  if (waterItem) {
+    [7, 9, 11, 13, 15, 17, 19, 21].forEach(h => {
+      scheduleNotif(waterItem, h, 0, now, true);
+    });
+  }
+}
+
+function scheduleNotif(item, hour, minute, now, isWater = false) {
+  const target = new Date();
+  target.setHours(hour, minute, 0, 0);
+  // Si ya pasó hoy, no programar (mañana se reprograma al abrir la app)
+  if (target.getTime() <= now.getTime()) return;
+
+  const ms = target.getTime() - now.getTime();
+
+  // Aviso primario a la hora exacta
+  const t1 = setTimeout(() => fireNotif(item, false, isWater), ms);
+  scheduledTimers.push(t1);
+
+  // Segundo recordatorio 30 min después si no hizo check
+  if (!isWater) { // El agua no necesita segundo recordatorio
+    const t2 = setTimeout(() => fireNotif(item, true, false), ms + 30 * 60 * 1000);
+    scheduledTimers.push(t2);
+  }
+}
+
+function fireNotif(item, isReminder, isWater) {
+  if (Notification.permission !== 'granted') return;
+
+  // Si ya hizo check (fiel/parcial/no fiel), no enviar el segundo recordatorio
+  if (isReminder && state.checks?.[item.id]) return;
+
+  const msg = pickMessage(item.id);
+  let title, body, tag;
+
+  if (isWater) {
+    title = `💧 Agua + sal`;
+    body = msg.texto;
+    tag = `pm-water-${Date.now()}`;
+  } else if (isReminder) {
+    title = `${item.icon} ${item.title} · recordatorio`;
+    body = SEGUNDO_RECORDATORIO[item.id] || msg.texto;
+    tag = `pm-${item.id}-2`;
+  } else {
+    title = `${item.icon} ${item.title}`;
+    body = msg.texto;
+    tag = `pm-${item.id}-1`;
+  }
+
+  try {
+    new Notification(title, {
+      body,
+      tag,
+      requireInteraction: false,
+      silent: false
+    });
+  } catch (e) {
+    console.warn('Error en notif:', e);
+  }
+}
+
+// Activar el botón
+const enableBtn = document.getElementById('enableNotifBtn');
+if (enableBtn) {
+  enableBtn.addEventListener('click', requestNotifPermission);
+}
+
+// Reprogramar al cargar y al volver a la app
+function bootNotifs() {
+  if (typeof Notification === 'undefined') return;
+  try {
+    if (Notification.permission === 'granted') {
+      scheduleAllNotifications();
+    }
+    updateNotifBanner();
+  } catch (e) {
+    console.warn('Error en bootNotifs:', e);
+  }
+}
+
+// Cuando la pestaña vuelve a estar visible, reprogramar
+document.addEventListener('visibilitychange', () => {
+  if (typeof Notification === 'undefined') return;
+  try {
+    if (!document.hidden && Notification.permission === 'granted') {
+      scheduleAllNotifications();
+    }
+  } catch (e) { /* noop */ }
+});
+
+// === INIT ===
+load();
+bootNotifs();
+</script>
+
+</body>
+</html>

@@ -285,7 +285,7 @@
                     ? (int) round(collect($heatmap)->sum(fn ($d) => $d['fidelidad'] ?? 0) / $diasConData)
                     : 0;
             @endphp
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div x-data="dayDetail()" class="bg-bg-card border border-white/[0.06] rounded-2xl p-6">
                 <div class="flex items-baseline justify-between mb-4">
                     <p class="text-xs text-gold tracking-[0.25em] uppercase">Su semana</p>
                     @if ($diasConData > 0)
@@ -319,12 +319,16 @@
                             }
                             $todayRing = $day['is_today'] ? 'ring-2 ring-gold/60 ring-offset-2 ring-offset-bg-card' : '';
                         @endphp
-                        <div class="text-center">
+                        <button
+                            type="button"
+                            @click="open('{{ $day['date'] }}')"
+                            class="text-center group"
+                        >
                             <div class="text-[10px] uppercase tracking-wider text-text-secondary/60 mb-1">
                                 {{ $day['label'] }}
                             </div>
                             <div
-                                class="aspect-square rounded-lg border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition"
+                                class="aspect-square rounded-lg border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition group-hover:border-white/30 cursor-pointer"
                                 title="{{ $day['date'] }}{{ $f !== null ? ' — '.$f.'%' : ' — sin checks' }}"
                             >
                                 <div class="text-[10px] text-text-secondary/60">{{ $day['day'] }}</div>
@@ -332,7 +336,7 @@
                                     {{ $f !== null ? $f.'%' : '·' }}
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     @endforeach
                 </div>
 
@@ -341,6 +345,76 @@
                         Su racha empieza con el primer check de hoy.
                     </p>
                 @endif
+
+                {{-- Modal detalle del día --}}
+                <div
+                    x-show="showing"
+                    x-cloak
+                    x-transition.opacity
+                    @keydown.escape.window="close()"
+                    class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+                    @click.self="close()"
+                >
+                    <div class="w-full max-w-md bg-bg-card border border-white/[0.08] rounded-2xl p-6 max-h-[85vh] overflow-y-auto">
+                        <div class="flex items-start justify-between gap-4 mb-5">
+                            <div>
+                                <p class="text-xs text-gold tracking-[0.25em] uppercase mb-1" x-text="data?.mode || ''"></p>
+                                <h3 class="font-serif text-xl capitalize" x-text="data?.date_label || ''"></h3>
+                            </div>
+                            <button @click="close()" class="text-text-secondary hover:text-text-primary text-2xl leading-none transition">×</button>
+                        </div>
+
+                        <template x-if="loading">
+                            <div class="text-center py-8">
+                                <div class="w-8 h-8 mx-auto rounded-full border-2 border-white/10 border-t-gold animate-spin"></div>
+                            </div>
+                        </template>
+
+                        <template x-if="!loading && data">
+                            <div>
+                                <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3 text-center mb-5">
+                                    <div class="font-serif text-3xl text-gold" x-text="data.fidelidad + '%'"></div>
+                                    <div class="text-xs text-text-secondary mt-1">Fidelidad del día</div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <template x-for="item in data.items" :key="item.item_id">
+                                        <div
+                                            class="bg-bg/50 border-l-2 rounded-lg p-3"
+                                            :class="{
+                                                'border-fiel': item.status === 'fiel',
+                                                'border-parcial': item.status === 'parcial',
+                                                'border-nofiel': item.status === 'nofiel',
+                                                'border-white/[0.04]': !item.status,
+                                            }"
+                                        >
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg text-base shrink-0" x-text="item.icono"></div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="text-[10px] text-text-secondary uppercase tracking-wider" x-text="item.hora || '—'"></div>
+                                                    <div class="font-serif text-sm truncate" x-text="item.nombre"></div>
+                                                </div>
+                                                <div
+                                                    class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                                    :class="{
+                                                        'bg-fiel text-black': item.status === 'fiel',
+                                                        'bg-parcial text-black': item.status === 'parcial',
+                                                        'bg-nofiel text-white': item.status === 'nofiel',
+                                                        'border border-white/15 text-text-secondary/50': !item.status,
+                                                    }"
+                                                    x-text="{ fiel: '✓', parcial: '~', nofiel: '✗' }[item.status] || ''"
+                                                ></div>
+                                            </div>
+                                            <template x-if="item.note">
+                                                <p class="text-xs text-text-secondary italic font-serif mt-2 pl-12" x-text="item.note"></p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
         @endif
 
@@ -468,6 +542,36 @@
                     iconFor(status) {
                         return { fiel: '✓', parcial: '~', nofiel: '✗' }[status] ?? '';
                     }
+                }
+            }
+
+            function dayDetail() {
+                return {
+                    showing: false,
+                    loading: false,
+                    data: null,
+                    async open(date) {
+                        this.showing = true;
+                        this.loading = true;
+                        this.data = null;
+                        try {
+                            const res = await fetch('/api/day/' + date, {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            this.data = await res.json();
+                        } catch (e) {
+                            console.error('day detail failed', e);
+                            alert('No se pudo cargar el detalle del día.');
+                            this.showing = false;
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                    close() {
+                        this.showing = false;
+                        this.data = null;
+                    },
                 }
             }
 

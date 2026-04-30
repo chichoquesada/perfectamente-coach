@@ -105,6 +105,67 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/api/mode', [ModeController::class, 'store'])->name('mode.store');
         Route::get('/api/insight/weekly', [InsightController::class, 'weekly'])->name('insight.weekly');
 
+        Route::get('/api/day/{date}', function (string $date) {
+            try {
+                $d = \Carbon\Carbon::parse($date);
+            } catch (\Throwable) {
+                abort(422, 'Fecha inválida');
+            }
+            // Solo permite ver últimos 30 días por seguridad/limites futuros
+            if ($d->diffInDays(now()) > 30 || $d->isAfter(now())) {
+                abort(403);
+            }
+            $key = $d->toDateString();
+            $plan = auth()->user()->activeNutritionalPlan;
+            if (! $plan) {
+                return response()->json(['error' => 'Sin plan activo'], 422);
+            }
+
+            $modeRow = \App\Models\DailyMode::where('date', $key)->first();
+            $mode = $modeRow?->mode ?? 'descanso';
+
+            $extracted = $plan->extracted_data ?? [];
+            $comidasBase = $extracted['comidas'] ?? [];
+            $comidasExtra = match ($mode) {
+                'entreno' => $extracted['comidas_entreno'] ?? [],
+                'competencia' => $extracted['comidas_competencia'] ?? [],
+                default => [],
+            };
+            $comidas = array_merge($comidasBase, $comidasExtra);
+
+            $checksByItem = \App\Models\DailyCheck::where('date', $key)->get()
+                ->keyBy('item_id');
+
+            $items = [];
+            foreach ($comidas as $idx => $c) {
+                $itemId = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$idx);
+                $check = $checksByItem->get($itemId);
+                $items[] = [
+                    'item_id' => $itemId,
+                    'nombre' => $c['nombre'] ?? 'Comida',
+                    'icono' => $c['icono_sugerido'] ?? '🍽️',
+                    'hora' => $c['hora'] ?? null,
+                    'status' => $check?->status,
+                    'note' => $check?->note,
+                ];
+            }
+
+            $score = $checksByItem->sum(fn ($c) => match ($c->status) {
+                'fiel' => 1, 'parcial' => 0.5, default => 0,
+            });
+            $fidelidad = count($comidas) > 0
+                ? (int) round(($score / count($comidas)) * 100)
+                : 0;
+
+            return response()->json([
+                'date' => $key,
+                'date_label' => $d->isoFormat('dddd, D [de] MMMM'),
+                'mode' => $mode,
+                'fidelidad' => $fidelidad,
+                'items' => $items,
+            ]);
+        })->name('day.show');
+
         Route::get('/plan', function () {
             return view('plan', ['plan' => auth()->user()->activeNutritionalPlan]);
         })->name('plan.show');

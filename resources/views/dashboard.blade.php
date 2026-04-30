@@ -250,7 +250,7 @@
                         :class="{
                             'text-fiel': data.tono === 'celebracion',
                             'text-gold': data.tono === 'motivacion',
-                            'text-nofiel': data.tono === 'alerta',
+                            'text-text-primary': data.tono === 'apoyo',
                         }"
                         x-text="data.insight_principal"
                     ></p>

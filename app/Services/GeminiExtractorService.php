@@ -73,17 +73,28 @@ class GeminiExtractorService
             );
         }
 
-        // Gemini a veces emite control chars (newlines, tabs sin escapar) dentro
-        // de strings JSON, que json_decode rechaza. Stripear estos chars es
-        // seguro: fuera de strings son whitespace ignorable, dentro de strings
-        // son inválidos por spec JSON de todas formas.
-        $cleaned = preg_replace('/[\x00-\x1F\x7F]/u', '', $jsonText);
+        // Gemini ocasionalmente emite control chars (saltos de linea reales,
+        // tabs sin escapar) dentro de strings JSON. json_decode los rechaza.
+        // Stripear bytes 0x00-0x1F (excepto que ya esten dentro de un escape
+        // \n \r \t literal) es seguro: fuera de strings son whitespace
+        // ignorable, dentro de strings son invalidos por spec JSON.
+        // Sin flag /u: opera byte-a-byte y no falla en bytes raros.
+        $cleaned = preg_replace('/[\x00-\x1F\x7F]/', '', $jsonText);
+        if ($cleaned === null) {
+            $cleaned = $jsonText; // preg_replace puede retornar null en error
+        }
 
         try {
             return json_decode($cleaned, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
+            // Persistimos el raw a un dump para debug forense.
+            $dumpPath = storage_path('logs/gemini_failed_' . now()->format('Ymd_His') . '.json');
+            @file_put_contents($dumpPath, $jsonText);
+
             throw new RuntimeException(
-                'Gemini devolvió JSON malformado: ' . $e->getMessage() . ' | raw: ' . substr($jsonText, 0, 500)
+                'Gemini devolvió JSON malformado: ' . $e->getMessage()
+                . ' | raw guardado en ' . basename($dumpPath)
+                . ' | preview: ' . substr($cleaned, 0, 300)
             );
         }
     }

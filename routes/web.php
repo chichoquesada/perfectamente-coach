@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CheckController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -20,8 +21,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('plan.required')->group(function () {
         Route::get('/dashboard', function () {
             $plan = auth()->user()->activeNutritionalPlan;
-            return view('dashboard', ['plan' => $plan]);
+            $today = now()->toDateString();
+
+            $checksToday = $plan
+                ? \App\Models\DailyCheck::where('date', $today)->pluck('status', 'item_id')->toArray()
+                : [];
+
+            $totalComidas = count($plan?->extracted_data['comidas'] ?? []);
+            $score = collect($checksToday)->sum(fn ($s) => match ($s) {
+                'fiel' => 1,
+                'parcial' => 0.5,
+                default => 0,
+            });
+            $fidelidad = $totalComidas > 0 ? (int) round(($score / $totalComidas) * 100) : 0;
+
+            return view('dashboard', compact('plan', 'checksToday', 'fidelidad'));
         })->name('dashboard');
+
+        Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
 
         Route::delete('/plan/active', function () {
             auth()->user()->activeNutritionalPlan?->delete();

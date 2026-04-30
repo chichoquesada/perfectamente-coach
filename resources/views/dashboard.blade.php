@@ -20,7 +20,6 @@
     @endphp
 
     @if (! $plan)
-        {{-- Sin plan: CTA onboarding --}}
         <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-8 text-center">
             <div class="text-5xl font-serif italic text-gold mb-4">~</div>
             <h2 class="font-serif text-xl mb-2">Aún no ha subido su plan</h2>
@@ -32,8 +31,10 @@
             </a>
         </div>
     @else
-        {{-- Resumen del plan extraído --}}
-        <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6">
+        <div
+            x-data="checks({{ \Illuminate\Support\Js::from($checksToday) }}, {{ $fidelidad }}, {{ count($comidas) }})"
+            class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6"
+        >
             <div class="flex items-start justify-between gap-4 mb-6">
                 <div>
                     <p class="text-xs text-gold tracking-[0.25em] uppercase mb-2">Su plan</p>
@@ -61,7 +62,7 @@
                     <div class="text-xs text-text-secondary mt-1">Suplementos</div>
                 </div>
                 <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3">
-                    <div class="font-serif text-2xl text-gold">0%</div>
+                    <div class="font-serif text-2xl text-gold" x-text="fidelidad + '%'"></div>
                     <div class="text-xs text-text-secondary mt-1">Fidelidad hoy</div>
                 </div>
             </div>
@@ -69,8 +70,19 @@
             @if (count($comidas) > 0)
                 <div class="space-y-2">
                     @foreach ($comidas as $c)
-                        <div class="flex items-center gap-3 p-3 bg-bg/50 border border-white/[0.04] rounded-xl">
-                            <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg text-xl">
+                        @php
+                            $itemId = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$loop->index);
+                        @endphp
+                        <div
+                            class="flex items-center gap-3 p-3 bg-bg/50 border-l-2 rounded-xl transition"
+                            :class="{
+                                'border-fiel': checks['{{ $itemId }}'] === 'fiel',
+                                'border-parcial': checks['{{ $itemId }}'] === 'parcial',
+                                'border-nofiel': checks['{{ $itemId }}'] === 'nofiel',
+                                'border-white/[0.04]': !checks['{{ $itemId }}'],
+                            }"
+                        >
+                            <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg text-xl shrink-0">
                                 {{ $c['icono_sugerido'] ?? '🍽️' }}
                             </div>
                             <div class="flex-1 min-w-0">
@@ -81,7 +93,23 @@
                                     {{ $c['nombre'] ?? 'Comida' }}
                                 </div>
                             </div>
-                            <button class="w-7 h-7 rounded-full border border-white/15 flex items-center justify-center text-xs opacity-40 cursor-not-allowed" title="Próximamente">
+
+                            <button
+                                type="button"
+                                @click="cycle('{{ $itemId }}')"
+                                :disabled="loading['{{ $itemId }}']"
+                                :class="{
+                                    'bg-fiel border-fiel text-black': checks['{{ $itemId }}'] === 'fiel',
+                                    'bg-parcial border-parcial text-black': checks['{{ $itemId }}'] === 'parcial',
+                                    'bg-nofiel border-nofiel text-white': checks['{{ $itemId }}'] === 'nofiel',
+                                    'border-white/15 text-text-secondary hover:border-white/30': !checks['{{ $itemId }}'],
+                                    'opacity-40': loading['{{ $itemId }}']
+                                }"
+                                class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
+                                title="Click para marcar"
+                            >
+                                <span x-show="!loading['{{ $itemId }}']" x-text="iconFor(checks['{{ $itemId }}'])"></span>
+                                <span x-show="loading['{{ $itemId }}']" x-cloak>…</span>
                             </button>
                         </div>
                     @endforeach
@@ -89,7 +117,7 @@
             @endif
 
             <p class="mt-6 text-xs text-text-secondary/60 italic font-serif text-center">
-                Sistema de checks (Fiel / Parcial / No fiel) próximamente.
+                Click en el círculo: vacío → Fiel → Parcial → No fiel → vacío
             </p>
         </div>
 
@@ -100,5 +128,52 @@
                 Reemplazar plan
             </button>
         </form>
+
+        <script>
+            function checks(initial, fidelidad, totalComidas) {
+                return {
+                    checks: initial,
+                    fidelidad: fidelidad,
+                    totalComidas: totalComidas,
+                    loading: {},
+                    cycle(itemId) {
+                        const order = [null, 'fiel', 'parcial', 'nofiel'];
+                        const current = this.checks[itemId] ?? null;
+                        const next = order[(order.indexOf(current) + 1) % order.length];
+                        this.send(itemId, next);
+                    },
+                    async send(itemId, status) {
+                        this.loading[itemId] = true;
+                        try {
+                            const res = await fetch('{{ route('checks.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                },
+                                body: JSON.stringify({ item_id: itemId, status: status }),
+                            });
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            const json = await res.json();
+                            if (json.status) {
+                                this.checks[itemId] = json.status;
+                            } else {
+                                delete this.checks[itemId];
+                            }
+                            this.fidelidad = json.fidelidad;
+                        } catch (e) {
+                            console.error('check failed', e);
+                            alert('No se pudo guardar. Reintente.');
+                        } finally {
+                            this.loading[itemId] = false;
+                        }
+                    },
+                    iconFor(status) {
+                        return { fiel: '✓', parcial: '~', nofiel: '✗' }[status] ?? '';
+                    }
+                }
+            }
+        </script>
     @endif
 </x-app-layout>

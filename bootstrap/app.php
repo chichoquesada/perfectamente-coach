@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'plan.required' => \App\Http\Middleware\EnsureHasActivePlan::class,
+            'nutri' => \App\Http\Middleware\EnsureIsNutritionist::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

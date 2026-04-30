@@ -11,8 +11,17 @@ class EnsureHasActivePlan
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && ! Auth::user()->activeNutritionalPlan()->exists()) {
-            return redirect()->route('onboarding.show');
+        $user = Auth::user();
+
+        if ($user) {
+            // Nutris no necesitan plan; los mandamos a su panel.
+            if ($user->isNutritionist()) {
+                return redirect()->route('nutri.dashboard');
+            }
+
+            if (! $user->activeNutritionalPlan()->exists()) {
+                return redirect()->route('onboarding.show');
+            }
         }
 
         return $next($request);

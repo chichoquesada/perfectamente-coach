@@ -24,6 +24,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'role',
+        'gamification_enabled',
     ];
 
     /**
@@ -46,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'gamification_enabled' => 'boolean',
         ];
     }
 
@@ -77,5 +80,60 @@ class User extends Authenticatable implements MustVerifyEmail
     public function referralsMade()
     {
         return $this->hasMany(AffiliateReferral::class, 'affiliate_user_id');
+    }
+
+    // ----- Roles -----
+
+    public function isNutritionist(): bool
+    {
+        return $this->role === 'nutritionist';
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->role === 'patient';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    // ----- Relación nutri ↔ paciente -----
+
+    /**
+     * Pacientes de este nutricionista (todos los estados).
+     */
+    public function patients()
+    {
+        return $this->belongsToMany(User::class, 'nutritionist_patient', 'nutritionist_id', 'patient_id')
+            ->withPivot(['status', 'invitation_token', 'invitation_email', 'invited_at', 'accepted_at', 'archived_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Pacientes activos del nutri.
+     */
+    public function activePatients()
+    {
+        return $this->patients()->wherePivot('status', 'active');
+    }
+
+    /**
+     * Nutricionistas a los que este paciente está vinculado.
+     */
+    public function nutritionists()
+    {
+        return $this->belongsToMany(User::class, 'nutritionist_patient', 'patient_id', 'nutritionist_id')
+            ->withPivot(['status', 'invited_at', 'accepted_at', 'archived_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Nutricionista activo del paciente (si tiene). Hoy: 1:1 activo a la vez.
+     */
+    public function activeNutritionist()
+    {
+        return $this->nutritionists()->wherePivot('status', 'active')->first();
     }
 }

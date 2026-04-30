@@ -277,26 +277,64 @@
             </template>
         </div>
 
-        {{-- Heatmap últimos 7 días --}}
+        {{-- Heatmap rango variable --}}
         @if (! empty($heatmap))
             @php
-                $diasConData = collect($heatmap)->filter(fn ($d) => $d['fidelidad'] !== null)->count();
-                $promedio = $diasConData > 0
-                    ? (int) round(collect($heatmap)->sum(fn ($d) => $d['fidelidad'] ?? 0) / $diasConData)
-                    : 0;
+                // Padding al lunes: dow del primer día (1=lun..7=dom) determina cuántas celdas vacías al inicio.
+                $firstDow = $heatmap[0]['dow'];
+                $padStart = $firstDow - 1;
+                $rangeLabel = ['7' => 'Su semana', '30' => 'Su mes', '90' => 'Sus 90 días'][(string) $range] ?? 'Su mes';
+                $isCompact = $range > 7;
             @endphp
             <div x-data="dayDetail()" class="bg-bg-card border border-white/[0.06] rounded-2xl p-6">
                 <div class="flex items-baseline justify-between mb-4">
-                    <p class="text-xs text-gold tracking-[0.25em] uppercase">Su semana</p>
-                    @if ($diasConData > 0)
-                        <p class="text-xs text-text-secondary">
-                            Promedio:
-                            <span class="text-text-primary font-medium">{{ $promedio }}%</span>
-                        </p>
-                    @endif
+                    <p class="text-xs text-gold tracking-[0.25em] uppercase">{{ $rangeLabel }}</p>
                 </div>
 
-                <div class="grid grid-cols-7 gap-2">
+                {{-- Selector de rango --}}
+                <div class="grid grid-cols-3 gap-1 bg-bg/50 border border-white/[0.06] p-1 rounded-full mb-5 text-xs">
+                    @foreach (['7' => 'Semana', '30' => 'Mes', '90' => '90 días'] as $r => $lbl)
+                        <a
+                            href="{{ route('dashboard', ['range' => $r]) }}"
+                            class="text-center py-1.5 rounded-full font-semibold transition {{ (int) $r === $range ? 'bg-gold text-black' : 'text-text-secondary hover:text-text-primary' }}"
+                        >{{ $lbl }}</a>
+                    @endforeach
+                </div>
+
+                {{-- Stats --}}
+                @if ($heatmapStats['dias_con_data'] > 0)
+                    <div class="grid grid-cols-4 gap-2 mb-5 text-center">
+                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                            <div class="font-serif text-base text-gold">{{ $heatmapStats['promedio'] }}%</div>
+                            <div class="text-[10px] text-text-secondary mt-0.5">Promedio</div>
+                        </div>
+                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                            <div class="font-serif text-base text-fiel">{{ $heatmapStats['dias_perfectos'] }}</div>
+                            <div class="text-[10px] text-text-secondary mt-0.5">Perfectos</div>
+                        </div>
+                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                            <div class="font-serif text-base text-gold">{{ $heatmapStats['racha_actual'] }}</div>
+                            <div class="text-[10px] text-text-secondary mt-0.5">Racha</div>
+                        </div>
+                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                            <div class="font-serif text-base text-text-primary">{{ $heatmapStats['racha_max'] }}</div>
+                            <div class="text-[10px] text-text-secondary mt-0.5">Máxima</div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Header de días (L M X J V S D) --}}
+                <div class="grid grid-cols-7 gap-1 mb-1">
+                    @foreach (['L', 'M', 'X', 'J', 'V', 'S', 'D'] as $dl)
+                        <div class="text-center text-[10px] uppercase tracking-wider text-text-secondary/50">{{ $dl }}</div>
+                    @endforeach
+                </div>
+
+                <div class="grid grid-cols-7 gap-1">
+                    @for ($i = 0; $i < $padStart; $i++)
+                        <div></div>
+                    @endfor
+
                     @foreach ($heatmap as $day)
                         @php
                             $f = $day['fidelidad'];
@@ -304,6 +342,10 @@
                                 $bg = 'bg-white/[0.03]';
                                 $border = 'border-white/[0.04]';
                                 $textColor = 'text-text-secondary/40';
+                            } elseif ($f === 100) {
+                                $bg = 'bg-gold/25';
+                                $border = 'border-gold/50';
+                                $textColor = 'text-gold';
                             } elseif ($f >= 67) {
                                 $bg = 'bg-fiel/20';
                                 $border = 'border-fiel/40';
@@ -317,30 +359,43 @@
                                 $border = 'border-nofiel/40';
                                 $textColor = 'text-nofiel';
                             }
-                            $todayRing = $day['is_today'] ? 'ring-2 ring-gold/60 ring-offset-2 ring-offset-bg-card' : '';
+                            $todayRing = $day['is_today'] ? 'ring-2 ring-gold/60 ring-offset-1 ring-offset-bg-card' : '';
                         @endphp
                         <button
                             type="button"
                             @click="open('{{ $day['date'] }}')"
-                            class="text-center group"
+                            class="group"
+                            title="{{ $day['date'] }}{{ $f !== null ? ' — '.$f.'%' : ' — sin checks' }}"
                         >
-                            <div class="text-[10px] uppercase tracking-wider text-text-secondary/60 mb-1">
-                                {{ $day['label'] }}
-                            </div>
                             <div
-                                class="aspect-square rounded-lg border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition group-hover:border-white/30 cursor-pointer"
-                                title="{{ $day['date'] }}{{ $f !== null ? ' — '.$f.'%' : ' — sin checks' }}"
+                                class="aspect-square rounded-md border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition group-hover:border-white/30 cursor-pointer"
                             >
-                                <div class="text-[10px] text-text-secondary/60">{{ $day['day'] }}</div>
-                                <div class="font-serif text-sm {{ $textColor }} mt-0.5">
-                                    {{ $f !== null ? $f.'%' : '·' }}
-                                </div>
+                                <div class="text-[9px] text-text-secondary/60 leading-none">{{ $day['day'] }}</div>
+                                @if (! $isCompact)
+                                    <div class="font-serif text-xs {{ $textColor }} mt-0.5 leading-none">
+                                        {{ $f !== null ? $f.'%' : '·' }}
+                                    </div>
+                                @else
+                                    <div class="font-serif text-[10px] {{ $textColor }} mt-0.5 leading-none">
+                                        {{ $f !== null ? '·' : '' }}
+                                    </div>
+                                @endif
                             </div>
                         </button>
                     @endforeach
                 </div>
 
-                @if ($diasConData === 0)
+                {{-- Leyenda compacta --}}
+                @if ($isCompact)
+                    <div class="flex items-center justify-center gap-3 mt-4 text-[10px] text-text-secondary/60">
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-nofiel/30 border border-nofiel/40"></span>Bajo</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-parcial/30 border border-parcial/40"></span>Medio</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-fiel/30 border border-fiel/40"></span>Alto</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-gold/30 border border-gold/50"></span>100%</span>
+                    </div>
+                @endif
+
+                @if ($heatmapStats['dias_con_data'] === 0)
                     <p class="text-xs text-text-secondary/60 text-center mt-4 italic font-serif">
                         Su racha empieza con el primer check de hoy.
                     </p>

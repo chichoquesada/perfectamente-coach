@@ -10,6 +10,11 @@ class UserObserver
 {
     public function created(User $user): void
     {
+        // Nutris no llevan Profile de paciente (plan, calendario entreno, etc.).
+        if ($user->role === 'nutritionist') {
+            return;
+        }
+
         Profile::create([
             'user_id' => $user->id,
             'nombre' => $user->name,

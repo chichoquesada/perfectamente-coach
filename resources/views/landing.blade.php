@@ -783,7 +783,10 @@
 <nav>
   <div class="nav-inner">
     <div class="nav-brand">Perfecta<span>MENTE</span> Coach</div>
-    <a href="#empezar" class="nav-cta">Empezar gratis</a>
+    <div style="display:flex; align-items:center; gap:18px;">
+      <a href="{{ route('login') }}" style="color: var(--text-dim); text-decoration:none; font-size:13px; font-weight:500;">Entrar</a>
+      <a href="#empezar" class="nav-cta">Empezar gratis</a>
+    </div>
   </div>
 </nav>
 

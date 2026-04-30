@@ -40,6 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
 
+        Route::get('/plan', function () {
+            return view('plan', ['plan' => auth()->user()->activeNutritionalPlan]);
+        })->name('plan.show');
+
         Route::delete('/plan/active', function () {
             auth()->user()->activeNutritionalPlan?->delete();
             return redirect()->route('onboarding.show')->with('status', 'Plan eliminado. Suba uno nuevo.');

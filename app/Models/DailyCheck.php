@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class DailyCheck extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
         'user_id',
         'nutritional_plan_id',
@@ -19,11 +22,6 @@ class DailyCheck extends Model
     protected $casts = [
         'date' => 'date',
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function plan()
     {

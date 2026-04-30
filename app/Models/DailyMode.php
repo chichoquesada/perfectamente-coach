@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class DailyMode extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
         'user_id',
         'date',
@@ -15,9 +18,4 @@ class DailyMode extends Model
     protected $casts = [
         'date' => 'date',
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class NutritionalPlan extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
         'user_id',
         'pdf_path',
@@ -20,11 +23,6 @@ class NutritionalPlan extends Model
         'extracted_data' => 'array',
         'is_active' => 'boolean',
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function checks()
     {

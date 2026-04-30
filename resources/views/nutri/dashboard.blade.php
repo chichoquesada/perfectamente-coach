@@ -49,19 +49,31 @@
         @else
             <div class="space-y-2">
                 @foreach ($patients as $p)
-                    <div class="flex items-center justify-between bg-bg/50 border border-white/[0.04] rounded-xl p-3">
-                        <div class="min-w-0">
-                            <div class="font-serif text-base truncate">{{ $p->name ?? $p->pivot->invitation_email }}</div>
-                            <div class="text-xs text-text-secondary truncate">{{ $p->email ?? $p->pivot->invitation_email }}</div>
+                    @if ($p->pivot->status === 'active')
+                        <a href="{{ route('nutri.patients.show', $p) }}"
+                           class="flex items-center justify-between bg-bg/50 border border-white/[0.04] rounded-xl p-3 hover:border-gold/30 transition">
+                            <div class="min-w-0">
+                                <div class="font-serif text-base truncate">{{ $p->name ?? $p->pivot->invitation_email }}</div>
+                                <div class="text-xs text-text-secondary truncate">{{ $p->email ?? $p->pivot->invitation_email }}</div>
+                            </div>
+                            <span class="shrink-0 text-xs px-3 py-1 rounded-full bg-fiel/15 text-fiel border border-fiel/30">
+                                Activo
+                            </span>
+                        </a>
+                    @else
+                        <div class="flex items-center justify-between bg-bg/50 border border-white/[0.04] rounded-xl p-3">
+                            <div class="min-w-0">
+                                <div class="font-serif text-base truncate">{{ $p->name ?? $p->pivot->invitation_email }}</div>
+                                <div class="text-xs text-text-secondary truncate">{{ $p->email ?? $p->pivot->invitation_email }}</div>
+                            </div>
+                            <span class="shrink-0 text-xs px-3 py-1 rounded-full
+                                @if ($p->pivot->status === 'invited') bg-parcial/15 text-parcial border border-parcial/30
+                                @else bg-white/5 text-text-secondary border border-white/10
+                                @endif">
+                                {{ ['invited' => 'Invitado', 'archived' => 'Archivado'][$p->pivot->status] ?? $p->pivot->status }}
+                            </span>
                         </div>
-                        <span class="shrink-0 text-xs px-3 py-1 rounded-full
-                            @if ($p->pivot->status === 'active') bg-fiel/15 text-fiel border border-fiel/30
-                            @elseif ($p->pivot->status === 'invited') bg-parcial/15 text-parcial border border-parcial/30
-                            @else bg-white/5 text-text-secondary border border-white/10
-                            @endif">
-                            {{ ['active' => 'Activo', 'invited' => 'Invitado', 'archived' => 'Archivado'][$p->pivot->status] ?? $p->pivot->status }}
-                        </span>
-                    </div>
+                    @endif
                 @endforeach
             </div>
         @endif

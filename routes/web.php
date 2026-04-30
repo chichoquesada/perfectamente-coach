@@ -5,6 +5,7 @@ use App\Http\Controllers\InsightController;
 use App\Http\Controllers\ModeController;
 use App\Http\Controllers\Nutri\InvitationController;
 use App\Http\Controllers\Nutri\NutriDashboardController;
+use App\Http\Controllers\Nutri\PatientController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -226,6 +227,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'nutri'])->prefix('nutri')->name('nutri.')->group(function () {
     Route::get('/', [NutriDashboardController::class, 'index'])->name('dashboard');
     Route::post('/invitar', [InvitationController::class, 'store'])->name('invitations.store');
+
+    Route::get('/pacientes/{patient}', [PatientController::class, 'show'])->name('patients.show');
+    Route::post('/pacientes/{patient}/notas', [PatientController::class, 'storeNote'])->name('patients.notes.store');
+    Route::delete('/pacientes/{patient}/notas/{note}', [PatientController::class, 'destroyNote'])->name('patients.notes.destroy');
 });
 
 // Aceptación de invitación (público).

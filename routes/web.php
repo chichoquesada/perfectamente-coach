@@ -37,9 +37,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             };
             $comidas = array_merge($comidasBase, $comidasExtra);
 
-            $checksToday = $plan
-                ? \App\Models\DailyCheck::where('date', $today)->pluck('status', 'item_id')->toArray()
-                : [];
+            $checksToday = [];
+            $notesToday = [];
+            if ($plan) {
+                foreach (\App\Models\DailyCheck::where('date', $today)->get() as $c) {
+                    $checksToday[$c->item_id] = $c->status;
+                    if ($c->note) {
+                        $notesToday[$c->item_id] = $c->note;
+                    }
+                }
+            }
 
             $totalComidas = count($comidas);
             $score = collect($checksToday)->sum(fn ($s) => match ($s) {
@@ -91,7 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 }
             }
 
-            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'fidelidad', 'mode', 'heatmap'));
+            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap'));
         })->name('dashboard');
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');

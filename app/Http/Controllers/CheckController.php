@@ -16,6 +16,7 @@ class CheckController extends Controller
             'item_id' => ['required', 'string', 'max:80'],
             'status'  => ['nullable', 'in:fiel,parcial,nofiel'],
             'note'    => ['nullable', 'string', 'max:500'],
+            'only_note' => ['nullable', 'boolean'],
         ]);
 
         $plan = Auth::user()->activeNutritionalPlan;
@@ -25,6 +26,32 @@ class CheckController extends Controller
         }
 
         $today = now()->toDateString();
+        $onlyNote = $data['only_note'] ?? false;
+
+        // Guardar SOLO la nota, sin tocar el status existente
+        if ($onlyNote) {
+            $existing = DailyCheck::where('date', $today)
+                ->where('item_id', $data['item_id'])
+                ->first();
+
+            if ($existing) {
+                $existing->update(['note' => $data['note'] ?? null]);
+            } else {
+                // Crear placeholder con status null no es válido por enum.
+                // Si no hay check todavía, se guarda nota cuando el usuario marca status.
+                // Pero queremos permitir nota sin status: usamos status='nofiel' silente?
+                // Mejor: rechazar si no hay status previo, instruir a marcar primero.
+                return response()->json([
+                    'error' => 'Marque la comida primero antes de agregar nota.',
+                ], 422);
+            }
+
+            return response()->json([
+                'status' => $existing->status,
+                'note' => $existing->note,
+                'fidelidad' => $this->fidelidadHoy($plan, $today),
+            ]);
+        }
 
         // status vacío => quitar el check (volver al estado neutro)
         if (empty($data['status'])) {
@@ -34,22 +61,29 @@ class CheckController extends Controller
 
             return response()->json([
                 'status' => null,
+                'note' => null,
                 'fidelidad' => $this->fidelidadHoy($plan, $today),
             ]);
         }
 
+        $attrs = [
+            'nutritional_plan_id' => $plan->id,
+            'status' => $data['status'],
+            'mode' => 'descanso',
+        ];
+        // Solo sobrescribir nota si se envió explícitamente (puede ser '' para borrar)
+        if ($request->has('note')) {
+            $attrs['note'] = $data['note'] ?? null;
+        }
+
         $check = DailyCheck::updateOrCreate(
             ['date' => $today, 'item_id' => $data['item_id']],
-            [
-                'nutritional_plan_id' => $plan->id,
-                'status' => $data['status'],
-                'note' => $data['note'] ?? null,
-                'mode' => 'descanso',
-            ]
+            $attrs,
         );
 
         return response()->json([
             'status' => $check->status,
+            'note' => $check->note,
             'fidelidad' => $this->fidelidadHoy($plan, $today),
         ]);
     }

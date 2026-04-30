@@ -54,7 +54,7 @@ class WeeklyInsightService
                     'generationConfig' => [
                         'responseMimeType' => 'application/json',
                         'temperature' => 0.7,
-                        'maxOutputTokens' => 2048,
+                        'maxOutputTokens' => 4096,
                     ],
                 ]
             );
@@ -64,15 +64,39 @@ class WeeklyInsightService
         }
 
         $jsonText = (string) $response->json('candidates.0.content.parts.0.text');
-        $cleaned = preg_replace('/[\x00-\x1F\x7F]/', '', $jsonText) ?? $jsonText;
+        $cleaned = $this->cleanJsonText($jsonText);
 
         try {
             $data = json_decode($cleaned, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new RuntimeException('Insight JSON malformado: ' . $e->getMessage());
+            $dumpPath = storage_path('logs/insight_failed_' . now()->format('Ymd_His') . '.json');
+            @file_put_contents($dumpPath, $jsonText);
+            throw new RuntimeException(
+                'Insight JSON malformado: ' . $e->getMessage()
+                . ' | raw guardado en ' . basename($dumpPath)
+            );
         }
 
         return $data + ['score_promedio' => $context['score_promedio']];
+    }
+
+    /**
+     * Limpia salida LLM antes de json_decode:
+     * 1. ASCII control chars (byte-level, no falla nunca)
+     * 2. Unicode line/paragraph separators U+2028/U+2029 y NBSP U+00A0
+     *    que JS tolera dentro de strings pero PHP json_decode rechaza.
+     */
+    private function cleanJsonText(string $raw): string
+    {
+        $step1 = preg_replace('/[\x00-\x1F\x7F]/', '', $raw);
+        if (! is_string($step1)) {
+            $step1 = $raw;
+        }
+        $step2 = @preg_replace('/[\x{2028}\x{2029}\x{00A0}]/u', ' ', $step1);
+        if (is_string($step2)) {
+            return $step2;
+        }
+        return $step1;
     }
 
     private function buildContext(User $user, NutritionalPlan $plan): array

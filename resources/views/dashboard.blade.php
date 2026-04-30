@@ -34,7 +34,7 @@
     <div class="grid lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
         <div
-            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}')"
+            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}')"
             class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8"
         >
             <div class="flex items-start justify-between gap-4 mb-6">
@@ -99,7 +99,7 @@
                             $itemId = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$loop->index);
                         @endphp
                         <div
-                            class="flex items-center gap-3 p-3 bg-bg/50 border-l-2 rounded-xl transition"
+                            class="bg-bg/50 border-l-2 rounded-xl transition"
                             :class="{
                                 'border-fiel': checks['{{ $itemId }}'] === 'fiel',
                                 'border-parcial': checks['{{ $itemId }}'] === 'parcial',
@@ -107,35 +107,92 @@
                                 'border-white/[0.04]': !checks['{{ $itemId }}'],
                             }"
                         >
-                            <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg text-xl shrink-0">
-                                {{ $c['icono_sugerido'] ?? '🍽️' }}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-xs text-text-secondary uppercase tracking-wider">
-                                    {{ $c['hora'] ?? '—' }}
+                            <div class="flex items-center gap-3 p-3">
+                                <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg text-xl shrink-0">
+                                    {{ $c['icono_sugerido'] ?? '🍽️' }}
                                 </div>
-                                <div class="font-serif text-base truncate">
-                                    {{ $c['nombre'] ?? 'Comida' }}
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs text-text-secondary uppercase tracking-wider">
+                                        {{ $c['hora'] ?? '—' }}
+                                    </div>
+                                    <div class="font-serif text-base truncate">
+                                        {{ $c['nombre'] ?? 'Comida' }}
+                                    </div>
+                                    <div
+                                        x-show="notes['{{ $itemId }}'] && noteOpen !== '{{ $itemId }}'"
+                                        @click="openNote('{{ $itemId }}')"
+                                        class="text-xs text-text-secondary italic mt-1 cursor-pointer hover:text-text-primary transition truncate"
+                                        x-text="notes['{{ $itemId }}']"
+                                    ></div>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    @click="openNote('{{ $itemId }}')"
+                                    :class="notes['{{ $itemId }}'] ? 'text-gold' : 'text-text-secondary/40 hover:text-text-secondary'"
+                                    class="w-7 h-7 flex items-center justify-center text-sm transition shrink-0"
+                                    title="Agregar nota"
+                                >
+                                    <span x-show="!notes['{{ $itemId }}']">+</span>
+                                    <span x-show="notes['{{ $itemId }}']" x-cloak>✎</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="cycle('{{ $itemId }}')"
+                                    :disabled="loading['{{ $itemId }}']"
+                                    :class="{
+                                        'bg-fiel border-fiel text-black': checks['{{ $itemId }}'] === 'fiel',
+                                        'bg-parcial border-parcial text-black': checks['{{ $itemId }}'] === 'parcial',
+                                        'bg-nofiel border-nofiel text-white': checks['{{ $itemId }}'] === 'nofiel',
+                                        'border-white/15 text-text-secondary hover:border-white/30': !checks['{{ $itemId }}'],
+                                        'opacity-40': loading['{{ $itemId }}']
+                                    }"
+                                    class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
+                                    title="Click para marcar"
+                                >
+                                    <span x-show="!loading['{{ $itemId }}']" x-text="iconFor(checks['{{ $itemId }}'])"></span>
+                                    <span x-show="loading['{{ $itemId }}']" x-cloak>…</span>
+                                </button>
                             </div>
 
-                            <button
-                                type="button"
-                                @click="cycle('{{ $itemId }}')"
-                                :disabled="loading['{{ $itemId }}']"
-                                :class="{
-                                    'bg-fiel border-fiel text-black': checks['{{ $itemId }}'] === 'fiel',
-                                    'bg-parcial border-parcial text-black': checks['{{ $itemId }}'] === 'parcial',
-                                    'bg-nofiel border-nofiel text-white': checks['{{ $itemId }}'] === 'nofiel',
-                                    'border-white/15 text-text-secondary hover:border-white/30': !checks['{{ $itemId }}'],
-                                    'opacity-40': loading['{{ $itemId }}']
-                                }"
-                                class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
-                                title="Click para marcar"
+                            {{-- Editor de nota inline --}}
+                            <div
+                                x-show="noteOpen === '{{ $itemId }}'"
+                                x-cloak
+                                x-transition.opacity
+                                class="px-3 pb-3"
                             >
-                                <span x-show="!loading['{{ $itemId }}']" x-text="iconFor(checks['{{ $itemId }}'])"></span>
-                                <span x-show="loading['{{ $itemId }}']" x-cloak>…</span>
-                            </button>
+                                <textarea
+                                    x-model="noteDraft"
+                                    placeholder="¿Qué pasó? (opcional, ayuda al análisis IA)"
+                                    rows="2"
+                                    maxlength="500"
+                                    class="w-full bg-bg border border-white/10 text-text-primary placeholder-text-secondary/40 focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition resize-none"
+                                ></textarea>
+                                <div class="flex items-center justify-between mt-2 gap-3">
+                                    <span class="text-xs text-text-secondary/40" x-text="(noteDraft || '').length + '/500'"></span>
+                                    <div class="flex gap-2">
+                                        <button
+                                            type="button"
+                                            @click="closeNote()"
+                                            class="text-xs text-text-secondary/60 hover:text-text-primary px-3 py-1 transition"
+                                        >Cancelar</button>
+                                        <button
+                                            type="button"
+                                            @click="saveNote('{{ $itemId }}')"
+                                            :disabled="loading['{{ $itemId }}']"
+                                            class="text-xs bg-gold text-black px-4 py-1 rounded-full font-semibold hover:bg-gold/90 disabled:opacity-40 transition"
+                                        >Guardar</button>
+                                    </div>
+                                </div>
+                                <p
+                                    x-show="!checks['{{ $itemId }}']"
+                                    class="text-xs text-text-secondary/60 italic mt-2"
+                                >
+                                    Marque la comida (✓ ~ ✗) antes de guardar la nota.
+                                </p>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -298,14 +355,60 @@
     </div> {{-- close grid lg:grid-cols-3 --}}
 
         <script>
-            function dashboard(initial, fidelidad, totalComidas, mode) {
+            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode) {
                 return {
-                    checks: initial,
+                    checks: initialChecks,
+                    notes: initialNotes,
                     fidelidad: fidelidad,
                     totalComidas: totalComidas,
                     mode: mode,
                     modeLoading: false,
                     loading: {},
+                    noteOpen: null,
+                    noteDraft: '',
+                    openNote(itemId) {
+                        this.noteOpen = itemId;
+                        this.noteDraft = this.notes[itemId] || '';
+                    },
+                    closeNote() {
+                        this.noteOpen = null;
+                        this.noteDraft = '';
+                    },
+                    async saveNote(itemId) {
+                        if (!this.checks[itemId]) {
+                            alert('Marque la comida (✓ ~ ✗) antes de guardar la nota.');
+                            return;
+                        }
+                        this.loading[itemId] = true;
+                        try {
+                            const res = await fetch('{{ route('checks.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                },
+                                body: JSON.stringify({
+                                    item_id: itemId,
+                                    only_note: true,
+                                    note: this.noteDraft,
+                                }),
+                            });
+                            const json = await res.json();
+                            if (!res.ok) throw new Error(json.error || 'HTTP ' + res.status);
+                            if (this.noteDraft) {
+                                this.notes[itemId] = this.noteDraft;
+                            } else {
+                                delete this.notes[itemId];
+                            }
+                            this.closeNote();
+                        } catch (e) {
+                            console.error('save note failed', e);
+                            alert(e.message || 'No se pudo guardar la nota.');
+                        } finally {
+                            this.loading[itemId] = false;
+                        }
+                    },
                     async setMode(next) {
                         if (next === this.mode || this.modeLoading) return;
                         this.modeLoading = true;
@@ -352,6 +455,7 @@
                                 this.checks[itemId] = json.status;
                             } else {
                                 delete this.checks[itemId];
+                                delete this.notes[itemId]; // backend ya borró el check entero
                             }
                             this.fidelidad = json.fidelidad;
                         } catch (e) {

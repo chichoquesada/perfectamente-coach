@@ -15,8 +15,8 @@
         $paciente = $data['paciente']['nombre'] ?? null;
         $objetivo = $data['objetivos']['principal'] ?? null;
         $metodologia = $data['metodologia'] ?? null;
-        $comidas = $data['comidas'] ?? [];
         $suplementos = $data['suplementos_diarios'] ?? [];
+        // $comidas, $mode, $checksToday, $fidelidad vienen del controller
     @endphp
 
     @if (! $plan)
@@ -32,7 +32,7 @@
         </div>
     @else
         <div
-            x-data="checks({{ \Illuminate\Support\Js::from($checksToday) }}, {{ $fidelidad }}, {{ count($comidas) }})"
+            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}')"
             class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6"
         >
             <div class="flex items-start justify-between gap-4 mb-6">
@@ -50,6 +50,29 @@
                         {{ $metodologia }}
                     </span>
                 @endif
+            </div>
+
+            {{-- Selector de modo del día --}}
+            <div class="mb-6">
+                <p class="text-xs text-text-secondary tracking-wider uppercase mb-2">Hoy es día de</p>
+                <div class="grid grid-cols-3 gap-2 bg-bg/50 border border-white/[0.06] p-1 rounded-full">
+                    @foreach ([
+                        'descanso' => ['Descanso', '🛌'],
+                        'entreno' => ['Entreno', '💪'],
+                        'competencia' => ['Competencia', '🏆'],
+                    ] as $key => [$label, $icon])
+                        <button
+                            type="button"
+                            @click="setMode('{{ $key }}')"
+                            :disabled="modeLoading"
+                            :class="mode === '{{ $key }}' ? 'bg-gold text-black' : 'text-text-secondary hover:text-text-primary'"
+                            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition"
+                        >
+                            <span>{{ $icon }}</span>
+                            <span>{{ $label }}</span>
+                        </button>
+                    @endforeach
+                </div>
             </div>
 
             <div class="grid grid-cols-3 gap-3 text-center mb-6">
@@ -130,12 +153,36 @@
         </form>
 
         <script>
-            function checks(initial, fidelidad, totalComidas) {
+            function dashboard(initial, fidelidad, totalComidas, mode) {
                 return {
                     checks: initial,
                     fidelidad: fidelidad,
                     totalComidas: totalComidas,
+                    mode: mode,
+                    modeLoading: false,
                     loading: {},
+                    async setMode(next) {
+                        if (next === this.mode || this.modeLoading) return;
+                        this.modeLoading = true;
+                        try {
+                            const res = await fetch('{{ route('mode.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                },
+                                body: JSON.stringify({ mode: next }),
+                            });
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            // Reload para que el server recalcule comidas con el modo nuevo
+                            window.location.reload();
+                        } catch (e) {
+                            console.error('mode failed', e);
+                            alert('No se pudo cambiar el modo. Reintente.');
+                            this.modeLoading = false;
+                        }
+                    },
                     cycle(itemId) {
                         const order = [null, 'fiel', 'parcial', 'nofiel'];
                         const current = this.checks[itemId] ?? null;

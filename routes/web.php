@@ -48,7 +48,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
             $fidelidad = $totalComidas > 0 ? (int) round(($score / $totalComidas) * 100) : 0;
 
-            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'fidelidad', 'mode'));
+            // Heatmap últimos 7 días (hoy y 6 atrás).
+            // Denominador = total de comidas con el modo de cada día (si existe registro);
+            // si no, usa el plan base. Sin checks => null (gris).
+            $heatmap = [];
+            if ($plan) {
+                $modesByDate = \App\Models\DailyMode::whereBetween('date', [
+                    now()->subDays(6)->toDateString(),
+                    $today,
+                ])->pluck('mode', 'date')->map(fn ($m, $d) => $m)->toArray();
+
+                $checksByDate = \App\Models\DailyCheck::whereBetween('date', [
+                    now()->subDays(6)->toDateString(),
+                    $today,
+                ])->get()->groupBy(fn ($c) => $c->date->toDateString());
+
+                for ($i = 6; $i >= 0; $i--) {
+                    $d = now()->subDays($i);
+                    $key = $d->toDateString();
+                    $dayMode = $modesByDate[$key] ?? 'descanso';
+                    $dayExtra = match ($dayMode) {
+                        'entreno' => $extracted['comidas_entreno'] ?? [],
+                        'competencia' => $extracted['comidas_competencia'] ?? [],
+                        default => [],
+                    };
+                    $totalDia = count($comidasBase) + count($dayExtra);
+                    $checksDia = $checksByDate->get($key, collect());
+                    $scoreDia = $checksDia->sum(fn ($c) => match ($c->status) {
+                        'fiel' => 1, 'parcial' => 0.5, default => 0,
+                    });
+
+                    $heatmap[] = [
+                        'date' => $key,
+                        'label' => $d->isoFormat('dd'), // L M X J V S D
+                        'day' => $d->day,
+                        'fidelidad' => ($totalDia > 0 && $checksDia->count() > 0)
+                            ? (int) round(($scoreDia / $totalDia) * 100)
+                            : null,
+                        'is_today' => $key === $today,
+                    ];
+                }
+            }
+
+            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'fidelidad', 'mode', 'heatmap'));
         })->name('dashboard');
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');

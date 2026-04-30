@@ -144,6 +144,73 @@
             </p>
         </div>
 
+        {{-- Heatmap últimos 7 días --}}
+        @if (! empty($heatmap))
+            @php
+                $diasConData = collect($heatmap)->filter(fn ($d) => $d['fidelidad'] !== null)->count();
+                $promedio = $diasConData > 0
+                    ? (int) round(collect($heatmap)->sum(fn ($d) => $d['fidelidad'] ?? 0) / $diasConData)
+                    : 0;
+            @endphp
+            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+                <div class="flex items-baseline justify-between mb-4">
+                    <p class="text-xs text-gold tracking-[0.25em] uppercase">Su semana</p>
+                    @if ($diasConData > 0)
+                        <p class="text-xs text-text-secondary">
+                            Promedio:
+                            <span class="text-text-primary font-medium">{{ $promedio }}%</span>
+                        </p>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-7 gap-2">
+                    @foreach ($heatmap as $day)
+                        @php
+                            $f = $day['fidelidad'];
+                            if ($f === null) {
+                                $bg = 'bg-white/[0.03]';
+                                $border = 'border-white/[0.04]';
+                                $textColor = 'text-text-secondary/40';
+                            } elseif ($f >= 67) {
+                                $bg = 'bg-fiel/20';
+                                $border = 'border-fiel/40';
+                                $textColor = 'text-fiel';
+                            } elseif ($f >= 34) {
+                                $bg = 'bg-parcial/20';
+                                $border = 'border-parcial/40';
+                                $textColor = 'text-parcial';
+                            } else {
+                                $bg = 'bg-nofiel/20';
+                                $border = 'border-nofiel/40';
+                                $textColor = 'text-nofiel';
+                            }
+                            $todayRing = $day['is_today'] ? 'ring-2 ring-gold/60 ring-offset-2 ring-offset-bg-card' : '';
+                        @endphp
+                        <div class="text-center">
+                            <div class="text-[10px] uppercase tracking-wider text-text-secondary/60 mb-1">
+                                {{ $day['label'] }}
+                            </div>
+                            <div
+                                class="aspect-square rounded-lg border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition"
+                                title="{{ $day['date'] }}{{ $f !== null ? ' — '.$f.'%' : ' — sin checks' }}"
+                            >
+                                <div class="text-[10px] text-text-secondary/60">{{ $day['day'] }}</div>
+                                <div class="font-serif text-sm {{ $textColor }} mt-0.5">
+                                    {{ $f !== null ? $f.'%' : '·' }}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                @if ($diasConData === 0)
+                    <p class="text-xs text-text-secondary/60 text-center mt-4 italic font-serif">
+                        Su racha empieza con el primer check de hoy.
+                    </p>
+                @endif
+            </div>
+        @endif
+
         <form action="{{ route('plan.destroy') }}" method="POST" onsubmit="return confirm('¿Eliminar el plan actual y subir uno nuevo?');" class="text-center">
             @csrf
             @method('DELETE')

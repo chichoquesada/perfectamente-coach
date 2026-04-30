@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CheckController;
+use App\Http\Controllers\InsightController;
 use App\Http\Controllers\ModeController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
@@ -95,6 +96,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
         Route::post('/api/mode', [ModeController::class, 'store'])->name('mode.store');
+        Route::get('/api/insight/weekly', [InsightController::class, 'weekly'])->name('insight.weekly');
 
         Route::get('/plan', function () {
             return view('plan', ['plan' => auth()->user()->activeNutritionalPlan]);

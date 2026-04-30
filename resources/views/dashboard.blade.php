@@ -148,6 +148,78 @@
     </div> {{-- close lg:col-span-2 --}}
 
     <aside class="space-y-6">
+        {{-- Análisis IA semanal --}}
+        <div
+            x-data="weeklyInsight()"
+            x-init="loadFromCache()"
+            class="bg-bg-card border border-white/[0.06] rounded-2xl p-6"
+        >
+            <div class="flex items-baseline justify-between mb-4">
+                <p class="text-xs text-gold tracking-[0.25em] uppercase">Análisis IA</p>
+                <button
+                    type="button"
+                    @click="generate(true)"
+                    :disabled="loading"
+                    class="text-xs text-text-secondary/60 hover:text-gold underline transition disabled:opacity-40"
+                >
+                    <span x-show="!data && !loading">Generar</span>
+                    <span x-show="data && !loading">Regenerar</span>
+                    <span x-show="loading" x-cloak>Pensando…</span>
+                </button>
+            </div>
+
+            <template x-if="!data && !loading && !error">
+                <div class="text-center py-6">
+                    <div class="text-3xl mb-2 opacity-40 font-serif italic text-gold">~</div>
+                    <p class="text-sm text-text-secondary">Pida su análisis semanal cuando esté listo.</p>
+                </div>
+            </template>
+
+            <template x-if="loading">
+                <div class="text-center py-6" x-cloak>
+                    <div class="w-10 h-10 mx-auto rounded-full border-2 border-white/10 border-t-gold animate-spin"></div>
+                    <p class="text-xs text-text-secondary mt-3">Leyendo su semana…</p>
+                </div>
+            </template>
+
+            <template x-if="error">
+                <p class="text-sm text-nofiel" x-text="error" x-cloak></p>
+            </template>
+
+            <template x-if="data && !loading">
+                <div x-cloak>
+                    <p
+                        class="font-serif text-lg leading-snug mb-4"
+                        :class="{
+                            'text-fiel': data.tono === 'celebracion',
+                            'text-gold': data.tono === 'motivacion',
+                            'text-nofiel': data.tono === 'alerta',
+                        }"
+                        x-text="data.insight_principal"
+                    ></p>
+
+                    <template x-if="data.patrones_detectados && data.patrones_detectados.length">
+                        <div class="mb-4">
+                            <p class="text-xs text-text-secondary uppercase tracking-wider mb-2">Patrones</p>
+                            <ul class="space-y-1.5">
+                                <template x-for="p in data.patrones_detectados" :key="p">
+                                    <li class="text-xs text-text-primary flex gap-2">
+                                        <span class="text-gold">·</span>
+                                        <span x-text="p"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </template>
+
+                    <div class="bg-bg/50 border-l-2 border-gold rounded-r-lg p-3">
+                        <p class="text-xs text-gold tracking-wider uppercase mb-1">Esta semana</p>
+                        <p class="text-sm text-text-primary italic font-serif" x-text="data.recomendacion"></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+
         {{-- Heatmap últimos 7 días --}}
         @if (! empty($heatmap))
             @php
@@ -291,6 +363,47 @@
                     },
                     iconFor(status) {
                         return { fiel: '✓', parcial: '~', nofiel: '✗' }[status] ?? '';
+                    }
+                }
+            }
+
+            function weeklyInsight() {
+                return {
+                    data: null,
+                    loading: false,
+                    error: null,
+                    cacheKey: 'pm.insight.weekly',
+                    cacheDateKey: 'pm.insight.weekly.date',
+                    loadFromCache() {
+                        // Solo restaura si fue de hoy (server cachea 24h igualmente)
+                        const today = new Date().toISOString().slice(0, 10);
+                        if (localStorage.getItem(this.cacheDateKey) === today) {
+                            try {
+                                this.data = JSON.parse(localStorage.getItem(this.cacheKey));
+                            } catch (e) { /* ignore */ }
+                        }
+                    },
+                    async generate(force = false) {
+                        if (this.loading) return;
+                        this.loading = true;
+                        this.error = null;
+                        try {
+                            const url = '{{ route('insight.weekly') }}' + (force ? '?refresh=1' : '');
+                            const res = await fetch(url, {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            const json = await res.json();
+                            if (!res.ok) throw new Error(json.error || 'HTTP ' + res.status);
+                            this.data = json;
+                            const today = new Date().toISOString().slice(0, 10);
+                            localStorage.setItem(this.cacheKey, JSON.stringify(json));
+                            localStorage.setItem(this.cacheDateKey, today);
+                        } catch (e) {
+                            console.error('insight failed', e);
+                            this.error = e.message || 'No pudimos generar su análisis.';
+                        } finally {
+                            this.loading = false;
+                        }
                     }
                 }
             }

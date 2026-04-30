@@ -350,7 +350,7 @@ APP_NAME=PerfectaMENTE
 APP_ENV=production
 APP_KEY=
 APP_DEBUG=false
-APP_URL=https://perfectamente.app
+APP_URL=https://planperfectamente.com
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -368,10 +368,10 @@ STRIPE_WEBHOOK_SECRET=
 MAIL_MAILER=smtp
 MAIL_HOST=mail.suserver.com
 MAIL_PORT=587
-MAIL_USERNAME=noreply@perfectamente.app
+MAIL_USERNAME=noreply@planperfectamente.com
 MAIL_PASSWORD=
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@perfectamente.app
+MAIL_FROM_ADDRESS=noreply@planperfectamente.com
 MAIL_FROM_NAME="PerfectaMENTE"
 ```
 

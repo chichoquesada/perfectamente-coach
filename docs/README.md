@@ -48,7 +48,7 @@ Suba el PDF de su nutricionista. La IA lo lee, lo organiza y le entrega un table
 ### Para nutricionistas (afiliados)
 
 - **30% de comisión recurrente** por cada cliente referido
-- Link único: `perfectamente.app/r/{codigo}`
+- Link único: `planperfectamente.com/r/{codigo}`
 - Dashboard de ingresos
 - No pagan nada, solo cobran
 
@@ -69,7 +69,7 @@ Suba el PDF de su nutricionista. La IA lo lee, lo organiza y le entrega un table
 | Pagos | **Stripe + Cashier** | 2.9% por venta |
 | Storage | Disco local WHM | $0 |
 | Email | SMTP del WHM | $0 |
-| Dominio | `perfectamente.app` | ~$1/mes (~$12/año) |
+| Dominio | `planperfectamente.com` | ~$1/mes (~$12/año) |
 
 **Total fijo: ~$1/mes.** Variable solo cuando hay usuarios reales.
 

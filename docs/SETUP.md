@@ -33,7 +33,7 @@ composer -v     # Debe mostrar Composer
 | GitHub | github.com | Repo privado |
 | Anthropic Console | console.anthropic.com | Claude API key (~$5 créditos free al inicio) |
 | Stripe | stripe.com | Pagos (modo test gratis, solo cobra al vender) |
-| Namecheap o GoDaddy | — | Dominio `perfectamente.app` (~$12/año) |
+| Namecheap o GoDaddy | — | Dominio `planperfectamente.com` (~$12/año) |
 
 **No necesita:** Vercel, Supabase, Netlify (NADA de eso, todo va al WHM).
 
@@ -77,9 +77,9 @@ Antes de deploy, valide que tiene:
 
 ### Crear el subdominio (opcional pero recomendado)
 
-Para tener `app.perfectamente.app` separado del marketing:
+Para tener `app.planperfectamente.com` separado del marketing:
 1. cPanel → Subdomains
-2. Crear `app.perfectamente.app` apuntando a `/home/usuario/perfectamente-app/public`
+2. Crear `app.planperfectamente.com` apuntando a `/home/usuario/perfectamente-app/public`
 3. (Cuando tenga el dominio comprado y apuntado al servidor)
 
 ---
@@ -210,7 +210,7 @@ Usar con: `./deploy.sh`
 | Item | Costo |
 |------|-------|
 | WHM hosting | $0 (ya pagado) |
-| Dominio `perfectamente.app` | ~$12/año |
+| Dominio `planperfectamente.com` | ~$12/año |
 | Claude API | ~$0.05 por extracción de plan (cobrado solo cuando se usa) |
 | Stripe | 2.9% + $0.30 por venta (cobrado solo cuando vende) |
 | **Costo fijo mensual** | **$1** |

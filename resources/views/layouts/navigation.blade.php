@@ -1,5 +1,5 @@
 <nav x-data="{ open: false }" class="bg-bg/80 backdrop-blur border-b border-white/[0.06] sticky top-0 z-50">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="flex justify-between h-14">
             <div class="flex items-center gap-8">
                 <a href="{{ route('dashboard') }}" class="font-serif italic text-base">

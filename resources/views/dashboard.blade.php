@@ -31,9 +31,11 @@
             </a>
         </div>
     @else
+    <div class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
         <div
             x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}')"
-            class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6"
+            class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8"
         >
             <div class="flex items-start justify-between gap-4 mb-6">
                 <div>
@@ -143,7 +145,9 @@
                 Click en el círculo: vacío → Fiel → Parcial → No fiel → vacío
             </p>
         </div>
+    </div> {{-- close lg:col-span-2 --}}
 
+    <aside class="space-y-6">
         {{-- Heatmap últimos 7 días --}}
         @if (! empty($heatmap))
             @php
@@ -218,6 +222,8 @@
                 Reemplazar plan
             </button>
         </form>
+    </aside>
+    </div> {{-- close grid lg:grid-cols-3 --}}
 
         <script>
             function dashboard(initial, fidelidad, totalComidas, mode) {

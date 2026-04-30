@@ -23,3 +23,5 @@ yarn-error.log
 /.zed
 /.claude
 /database/database.sqlite
+/storage/certs/cacert.pem
+/docs/*.pdf

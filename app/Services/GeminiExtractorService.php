@@ -36,7 +36,10 @@ class GeminiExtractorService
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'X-goog-api-key' => $this->apiKey,
-        ])->timeout(120)->post(
+        ])
+            ->withOptions(['verify' => $this->caBundle()])
+            ->timeout(120)
+            ->post(
             "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
             [
                 'contents' => [[
@@ -77,6 +80,19 @@ class GeminiExtractorService
                 'Gemini devolvió JSON malformado: ' . $e->getMessage() . ' | raw: ' . $jsonText
             );
         }
+    }
+
+    /**
+     * Usa el CA bundle del proyecto si existe (necesario en Windows local
+     * donde PHP CLI no tiene curl.cainfo configurado). En servidores Linux
+     * con cacert del sistema esto sigue funcionando porque el bundle local
+     * es válido y completo.
+     */
+    private function caBundle(): string|bool
+    {
+        $local = storage_path('certs/cacert.pem');
+
+        return is_file($local) ? $local : true;
     }
 
     private function prompt(): string

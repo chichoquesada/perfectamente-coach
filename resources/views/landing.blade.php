@@ -1030,7 +1030,7 @@
 <footer>
   <div class="container">
     <div class="footer-brand">Perfecta<span>MENTE</span> Coach</div>
-    <p class="footer-meta">© 2026 · <a href="#">Términos</a> · <a href="#">Privacidad</a> · <a href="#">Contacto</a></p>
+    <p class="footer-meta">© 2026 · <a href="{{ route('legal.terms') }}">Términos</a> · <a href="{{ route('legal.privacy') }}">Privacidad</a> · <a href="mailto:hola@planperfectamente.com">Contacto</a></p>
     <p class="footer-quote">"La fidelidad diaria es lo que separa a los campeones del resto." — @chichoqv</p>
   </div>
 </footer>

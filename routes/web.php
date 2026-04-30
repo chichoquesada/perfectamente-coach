@@ -14,6 +14,9 @@ Route::get('/', function () {
     return view('landing');
 })->name('landing');
 
+Route::view('/terminos', 'legal.terms')->name('legal.terms');
+Route::view('/privacidad', 'legal.privacy')->name('legal.privacy');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Onboarding (sin plan.required: el propio show() decide)
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');

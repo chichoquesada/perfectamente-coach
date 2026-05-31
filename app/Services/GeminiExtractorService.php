@@ -54,7 +54,10 @@ class GeminiExtractorService
                 'generationConfig' => [
                     'responseMimeType' => 'application/json',
                     'temperature' => 0.2,
-                    'maxOutputTokens' => 8192,
+                    // gemini-flash-latest admite hasta 65536 tokens de salida.
+                    // Con 8192 los planes grandes (muchas opciones de comida) se
+                    // truncaban a mitad de string → JSON inválido.
+                    'maxOutputTokens' => 65536,
                 ],
             ]
         );
@@ -66,10 +69,12 @@ class GeminiExtractorService
         }
 
         $jsonText = $response->json('candidates.0.content.parts.0.text');
+        $finishReason = $response->json('candidates.0.finishReason');
 
         if (! is_string($jsonText) || $jsonText === '') {
             throw new RuntimeException(
-                'Gemini devolvió respuesta vacía: ' . $response->body()
+                'Gemini devolvió respuesta vacía (finishReason: '
+                . ($finishReason ?? 'desconocido') . '): ' . $response->body()
             );
         }
 
@@ -83,19 +88,109 @@ class GeminiExtractorService
         $step2 = @preg_replace('/[\x{2028}\x{2029}\x{00A0}]/u', ' ', $step1);
         $cleaned = is_string($step2) ? $step2 : $step1;
 
-        try {
-            return json_decode($cleaned, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            // Persistimos el raw a un dump para debug forense.
-            $dumpPath = storage_path('logs/gemini_failed_' . now()->format('Ymd_His') . '.json');
-            @file_put_contents($dumpPath, $jsonText);
-
-            throw new RuntimeException(
-                'Gemini devolvió JSON malformado: ' . $e->getMessage()
-                . ' | raw guardado en ' . basename($dumpPath)
-                . ' | preview: ' . substr($cleaned, 0, 300)
-            );
+        // Intento 1: parseo directo.
+        $decoded = json_decode($cleaned, true);
+        if (is_array($decoded)) {
+            return $decoded;
         }
+
+        // Intento 2: si Gemini truncó la salida (MAX_TOKENS), el JSON queda
+        // incompleto. Intentamos repararlo cerrando lo que quedó abierto.
+        $repaired = $this->repairTruncatedJson($cleaned);
+        if ($repaired !== null) {
+            $decoded = json_decode($repaired, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        // Falló todo: persistimos el raw y lanzamos un error con diagnóstico real.
+        $dumpPath = storage_path('logs/gemini_failed_' . now()->format('Ymd_His') . '.json');
+        @file_put_contents($dumpPath, $jsonText);
+
+        $diag = $finishReason === 'MAX_TOKENS'
+            ? 'la respuesta se truncó por longitud (finishReason: MAX_TOKENS)'
+            : 'JSON malformado: ' . json_last_error_msg() . ' (finishReason: ' . ($finishReason ?? 'STOP') . ')';
+
+        throw new RuntimeException(
+            'Gemini devolvió ' . $diag
+            . ' | raw guardado en ' . basename($dumpPath)
+            . ' | preview: ' . substr($cleaned, 0, 300)
+        );
+    }
+
+    /**
+     * Repara, best-effort, un JSON truncado a mitad de generación:
+     * recorta cualquier string sin cerrar y balancea los {} y [] abiertos.
+     * Devuelve null si no parece recuperable.
+     */
+    private function repairTruncatedJson(string $json): ?string
+    {
+        $json = rtrim($json);
+        if ($json === '' || $json[0] !== '{') {
+            return null;
+        }
+
+        $stack = [];        // pila de contenedores abiertos: '{' o '['
+        $inString = false;
+        $escaped = false;
+        $lastSafe = 0;      // offset hasta el último carácter "seguro" fuera de string
+
+        for ($i = 0, $n = strlen($json); $i < $n; $i++) {
+            $ch = $json[$i];
+
+            if ($inString) {
+                if ($escaped) {
+                    $escaped = false;
+                } elseif ($ch === '\\') {
+                    $escaped = true;
+                } elseif ($ch === '"') {
+                    $inString = false;
+                    $lastSafe = $i;
+                }
+                continue;
+            }
+
+            if ($ch === '"') {
+                $inString = true;
+            } elseif ($ch === '{' || $ch === '[') {
+                $stack[] = $ch;
+                $lastSafe = $i;
+            } elseif ($ch === '}' || $ch === ']') {
+                array_pop($stack);
+                $lastSafe = $i;
+            } elseif ($ch === ',' || (! ctype_space($ch) && $ch !== ':')) {
+                $lastSafe = $i;
+            }
+        }
+
+        // Recortamos hasta el último token completo fuera de string y
+        // eliminamos una coma colgante, luego cerramos contenedores abiertos.
+        $trimmed = rtrim(substr($json, 0, $lastSafe + 1));
+        $trimmed = rtrim($trimmed, ',');
+
+        // Recalculamos qué contenedores siguen abiertos sobre el texto recortado.
+        $closers = '';
+        $stack2 = [];
+        $inString = false;
+        $escaped = false;
+        for ($i = 0, $n = strlen($trimmed); $i < $n; $i++) {
+            $ch = $trimmed[$i];
+            if ($inString) {
+                if ($escaped) { $escaped = false; }
+                elseif ($ch === '\\') { $escaped = true; }
+                elseif ($ch === '"') { $inString = false; }
+                continue;
+            }
+            if ($ch === '"') { $inString = true; }
+            elseif ($ch === '{' || $ch === '[') { $stack2[] = $ch; }
+            elseif ($ch === '}' || $ch === ']') { array_pop($stack2); }
+        }
+        while (! empty($stack2)) {
+            $closers .= (array_pop($stack2) === '{') ? '}' : ']';
+        }
+
+        return $trimmed . $closers;
     }
 
     /**

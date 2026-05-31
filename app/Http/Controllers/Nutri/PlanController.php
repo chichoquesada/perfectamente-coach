@@ -81,7 +81,7 @@ class PlanController extends Controller
             Storage::delete($path);
 
             return response()->json([
-                'error' => 'No pudimos leer el PDF. Verifique que tenga texto legible (no escaneado) e intente de nuevo.',
+                'error' => 'No pudimos procesar el PDF automáticamente. Intente de nuevo; si el PDF es escaneado (imagen) o muy largo, puede cargar el plan manualmente.',
             ], 422);
         }
 

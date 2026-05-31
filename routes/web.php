@@ -6,6 +6,7 @@ use App\Http\Controllers\ModeController;
 use App\Http\Controllers\Nutri\InvitationController;
 use App\Http\Controllers\Nutri\NutriDashboardController;
 use App\Http\Controllers\Nutri\PatientController;
+use App\Http\Controllers\Nutri\PlanController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             };
             $comidas = array_merge($comidasBase, $comidasExtra);
 
+            // Suplementos y farmacología (estructurados) — checkeables aparte.
+            $suplementos = $extracted['suplementos'] ?? [];
+            $farmacologia = $extracted['farmacologia'] ?? [];
+            // Compat: planes viejos con lista plana en suplementos_diarios.
+            if (empty($suplementos) && ! empty($extracted['suplementos_diarios'])) {
+                $suplementos = collect($extracted['suplementos_diarios'])
+                    ->map(fn ($s) => is_array($s) ? ($s['nombre'] ?? '') : (string) $s)
+                    ->filter(fn ($n) => trim($n) !== '')
+                    ->map(fn ($n) => [
+                        'id' => 'sup-'.\Illuminate\Support\Str::slug($n).'-'.substr(md5($n), 0, 4),
+                        'nombre' => $n, 'dosis' => null, 'frecuencia' => null, 'nota' => null,
+                    ])->values()->all();
+            }
+
+            // Los checks de sup-/farm- NO cuentan para la fidelidad de comidas.
+            $isMealCheck = fn ($id) => ! str_starts_with($id, 'sup-') && ! str_starts_with($id, 'farm-');
+
             $checksToday = [];
             $notesToday = [];
             if ($plan) {
@@ -57,11 +75,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
 
             $totalComidas = count($comidas);
-            $score = collect($checksToday)->sum(fn ($s) => match ($s) {
-                'fiel' => 1,
-                'parcial' => 0.5,
-                default => 0,
-            });
+            $score = collect($checksToday)
+                ->filter(fn ($s, $id) => $isMealCheck($id))
+                ->sum(fn ($s) => match ($s) {
+                    'fiel' => 1,
+                    'parcial' => 0.5,
+                    default => 0,
+                });
             $fidelidad = $totalComidas > 0 ? (int) round(($score / $totalComidas) * 100) : 0;
 
             // Heatmap rango variable (7 / 30 / 90 días). Default 30.
@@ -90,7 +110,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         default => [],
                     };
                     $totalDia = count($comidasBase) + count($dayExtra);
-                    $checksDia = $checksByDate->get($key, collect());
+                    $checksDia = $checksByDate->get($key, collect())
+                        ->filter(fn ($c) => $isMealCheck($c->item_id));
                     $scoreDia = $checksDia->sum(fn ($c) => match ($c->status) {
                         'fiel' => 1, 'parcial' => 0.5, default => 0,
                     });
@@ -144,7 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $heatmapStats['dias_con_data'] = $diasConData;
             }
 
-            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap', 'range', 'heatmapStats'));
+            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap', 'range', 'heatmapStats', 'suplementos', 'farmacologia'));
         })->name('dashboard');
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
@@ -196,9 +217,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ];
             }
 
-            $score = $checksByItem->sum(fn ($c) => match ($c->status) {
-                'fiel' => 1, 'parcial' => 0.5, default => 0,
-            });
+            $score = $checksByItem
+                ->filter(fn ($c, $id) => ! str_starts_with($id, 'sup-') && ! str_starts_with($id, 'farm-'))
+                ->sum(fn ($c) => match ($c->status) {
+                    'fiel' => 1, 'parcial' => 0.5, default => 0,
+                });
             $fidelidad = count($comidas) > 0
                 ? (int) round(($score / count($comidas)) * 100)
                 : 0;
@@ -231,6 +254,14 @@ Route::middleware(['auth', 'verified', 'nutri'])->prefix('nutri')->name('nutri.'
     Route::get('/pacientes/{patient}', [PatientController::class, 'show'])->name('patients.show');
     Route::post('/pacientes/{patient}/notas', [PatientController::class, 'storeNote'])->name('patients.notes.store');
     Route::delete('/pacientes/{patient}/notas/{note}', [PatientController::class, 'destroyNote'])->name('patients.notes.destroy');
+
+    Route::get('/planes', [PlanController::class, 'index'])->name('plans.index');
+    Route::get('/planes/nuevo', [PlanController::class, 'create'])->name('plans.create');
+    Route::post('/planes', [PlanController::class, 'store'])->name('plans.store');
+    Route::get('/planes/{plan}/editar', [PlanController::class, 'edit'])->name('plans.edit');
+    Route::put('/planes/{plan}', [PlanController::class, 'update'])->name('plans.update');
+    Route::post('/planes/{plan}/duplicar', [PlanController::class, 'duplicate'])->name('plans.duplicate');
+    Route::delete('/planes/{plan}', [PlanController::class, 'destroy'])->name('plans.destroy');
 });
 
 // Aceptación de invitación (público).

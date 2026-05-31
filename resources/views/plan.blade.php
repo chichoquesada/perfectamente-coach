@@ -9,6 +9,8 @@
         $paciente = $d['paciente'] ?? [];
         $permitidos = $d['permitidos'] ?? [];
         $evitar = $d['evitar'] ?? [];
+        $suplementos = $d['suplementos'] ?? [];
+        $farmacologia = $d['farmacologia'] ?? [];
         $supDiarios = $d['suplementos_diarios'] ?? [];
         $supEntreno = $d['suplementos_entreno'] ?? [];
         $comidaLibre = $d['comida_libre'] ?? null;
@@ -108,38 +110,64 @@
             </div>
         @endif
 
-        {{-- Suplementos --}}
-        @if (count($supDiarios) > 0 || count($supEntreno) > 0)
+        {{-- Suplementos (estructurados) --}}
+        @if (count($suplementos) > 0)
+            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+                <p class="text-xs text-gold tracking-[0.25em] uppercase mb-4">🥤 Suplementos</p>
+                <div class="space-y-3">
+                    @foreach ($suplementos as $s)
+                        <div class="flex items-start gap-3">
+                            <span class="text-gold mt-0.5">·</span>
+                            <div>
+                                <div class="text-sm text-text-primary">
+                                    <span class="font-medium">{{ $s['nombre'] ?? '' }}</span>
+                                    @if (! empty($s['dosis']))<span class="text-text-secondary"> — {{ $s['dosis'] }}</span>@endif
+                                    @if (! empty($s['frecuencia']))<span class="text-text-secondary/70"> · {{ $s['frecuencia'] }}</span>@endif
+                                </div>
+                                @if (! empty($s['nota']))
+                                    <div class="text-xs text-text-secondary/60 italic mt-0.5">{{ $s['nota'] }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @elseif (count($supDiarios) > 0 || count($supEntreno) > 0)
+            {{-- Fallback legacy: lista plana --}}
             <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-gold tracking-[0.25em] uppercase mb-4">Suplementos</p>
+                <ul class="space-y-1.5">
+                    @foreach (array_merge($supDiarios, $supEntreno) as $s)
+                        <li class="text-sm text-text-primary flex gap-2">
+                            <span class="text-gold">·</span>
+                            <span>{{ is_array($s) ? ($s['nombre'] ?? '') : $s }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-                @if (count($supDiarios) > 0)
-                    <h3 class="font-serif text-base mb-2">Diarios</h3>
-                    <ul class="space-y-1.5 mb-4">
-                        @foreach ($supDiarios as $s)
-                            <li class="text-sm text-text-primary flex gap-2">
-                                <span class="text-gold">·</span>
-                                <span>
-                                    {{ is_array($s) ? ($s['nombre'] ?? '') . (isset($s['dosis']) ? ' — ' . $s['dosis'] : '') : $s }}
-                                </span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-
-                @if (count($supEntreno) > 0)
-                    <h3 class="font-serif text-base mb-2">Para entreno</h3>
-                    <ul class="space-y-1.5">
-                        @foreach ($supEntreno as $s)
-                            <li class="text-sm text-text-primary flex gap-2">
-                                <span class="text-gold">·</span>
-                                <span>
-                                    {{ is_array($s) ? ($s['nombre'] ?? '') . (isset($s['dosis']) ? ' — ' . $s['dosis'] : '') : $s }}
-                                </span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+        {{-- Farmacología (estructurada) --}}
+        @if (count($farmacologia) > 0)
+            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+                <p class="text-xs text-gold tracking-[0.25em] uppercase mb-4">💊 Farmacología</p>
+                <div class="space-y-3">
+                    @foreach ($farmacologia as $f)
+                        <div class="flex items-start gap-3">
+                            <span class="text-gold mt-0.5">·</span>
+                            <div>
+                                <div class="text-sm text-text-primary">
+                                    <span class="font-medium">{{ $f['nombre'] ?? '' }}</span>
+                                    @if (! empty($f['dosis']))<span class="text-text-secondary"> — {{ $f['dosis'] }}</span>@endif
+                                    @if (! empty($f['frecuencia']))<span class="text-text-secondary/70"> · {{ $f['frecuencia'] }}</span>@endif
+                                </div>
+                                @if (! empty($f['nota']))
+                                    <div class="text-xs text-text-secondary/60 italic mt-0.5">{{ $f['nota'] }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         @endif
 

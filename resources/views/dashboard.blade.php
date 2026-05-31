@@ -15,8 +15,8 @@
         $paciente = $data['paciente']['nombre'] ?? null;
         $objetivo = $data['objetivos']['principal'] ?? null;
         $metodologia = $data['metodologia'] ?? null;
-        $suplementos = $data['suplementos_diarios'] ?? [];
-        // $comidas, $mode, $checksToday, $fidelidad vienen del controller
+        // $comidas, $mode, $checksToday, $fidelidad, $suplementos, $farmacologia vienen del controller
+        $totalSupFarma = count($suplementos) + count($farmacologia);
     @endphp
 
     @if (! $plan)
@@ -83,8 +83,8 @@
                     <div class="text-xs text-text-secondary mt-1">Comidas</div>
                 </div>
                 <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3">
-                    <div class="font-serif text-2xl text-gold">{{ count($suplementos) }}</div>
-                    <div class="text-xs text-text-secondary mt-1">Suplementos</div>
+                    <div class="font-serif text-2xl text-gold">{{ $totalSupFarma }}</div>
+                    <div class="text-xs text-text-secondary mt-1">Sup/Fármacos</div>
                 </div>
                 <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3">
                     <div class="font-serif text-2xl text-gold" x-text="fidelidad + '%'"></div>
@@ -201,6 +201,68 @@
             <p class="mt-6 text-xs text-text-secondary/60 italic font-serif text-center">
                 Click en el círculo: vacío → Fiel → Parcial → No fiel → vacío
             </p>
+
+            @if ($totalSupFarma > 0)
+                <div class="mt-8 pt-6 border-t border-white/[0.06]">
+                    @foreach ([
+                        ['items' => $suplementos, 'label' => '🥤 Suplementos'],
+                        ['items' => $farmacologia, 'label' => '💊 Farmacología'],
+                    ] as $section)
+                        @if (count($section['items']) > 0)
+                            <p class="text-xs text-gold tracking-[0.25em] uppercase mb-3">{{ $section['label'] }}</p>
+                            <div class="space-y-2 mb-5">
+                                @foreach ($section['items'] as $s)
+                                    @php
+                                        $sid = $s['id'] ?? ('sup-'.\Illuminate\Support\Str::slug($s['nombre'] ?? 'item-'.$loop->index));
+                                        $sub = trim(implode(' · ', array_filter([$s['dosis'] ?? null, $s['frecuencia'] ?? null])));
+                                    @endphp
+                                    <div
+                                        class="bg-bg/50 border-l-2 rounded-xl transition"
+                                        :class="{
+                                            'border-fiel': checks['{{ $sid }}'] === 'fiel',
+                                            'border-parcial': checks['{{ $sid }}'] === 'parcial',
+                                            'border-nofiel': checks['{{ $sid }}'] === 'nofiel',
+                                            'border-white/[0.04]': !checks['{{ $sid }}'],
+                                        }"
+                                    >
+                                        <div class="flex items-center gap-3 p-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-serif text-base truncate">{{ $s['nombre'] ?? '' }}</div>
+                                                @if ($sub !== '')
+                                                    <div class="text-xs text-text-secondary truncate">{{ $sub }}</div>
+                                                @endif
+                                                @if (! empty($s['nota']))
+                                                    <div class="text-xs text-text-secondary/60 italic truncate">{{ $s['nota'] }}</div>
+                                                @endif
+                                            </div>
+                                            <button
+                                                type="button"
+                                                @click="cycle('{{ $sid }}')"
+                                                :disabled="loading['{{ $sid }}']"
+                                                :class="{
+                                                    'bg-fiel border-fiel text-black': checks['{{ $sid }}'] === 'fiel',
+                                                    'bg-parcial border-parcial text-black': checks['{{ $sid }}'] === 'parcial',
+                                                    'bg-nofiel border-nofiel text-white': checks['{{ $sid }}'] === 'nofiel',
+                                                    'border-white/15 text-text-secondary hover:border-white/30': !checks['{{ $sid }}'],
+                                                    'opacity-40': loading['{{ $sid }}']
+                                                }"
+                                                class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
+                                                title="Click para marcar"
+                                            >
+                                                <span x-show="!loading['{{ $sid }}']" x-text="iconFor(checks['{{ $sid }}'])"></span>
+                                                <span x-show="loading['{{ $sid }}']" x-cloak>…</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    @endforeach
+                    <p class="text-xs text-text-secondary/60 italic font-serif text-center">
+                        Marcar suplementos o fármacos no afecta su % de fidelidad de comidas.
+                    </p>
+                </div>
+            @endif
         </div>
     </div> {{-- close lg:col-span-2 --}}
 

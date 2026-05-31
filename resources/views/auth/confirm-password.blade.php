@@ -10,7 +10,7 @@
 
         <div>
             <x-input-label for="password" value="Contraseña" />
-            <x-text-input id="password" class="mt-1" type="password" name="password" required autocomplete="current-password" />
+            <x-password-input id="password" class="mt-1" name="password" required autocomplete="current-password" />
             <x-input-error :messages="$errors->get('password')" />
         </div>
 

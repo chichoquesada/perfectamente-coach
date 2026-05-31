@@ -1,18 +1,28 @@
+@php $isNutri = Auth::user()?->isNutritionist(); @endphp
 <nav x-data="{ open: false }" class="bg-bg/80 backdrop-blur border-b border-white/[0.06] sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="flex justify-between h-14">
             <div class="flex items-center gap-8">
-                <a href="{{ route('dashboard') }}" class="font-serif italic text-base">
+                <a href="{{ $isNutri ? route('nutri.dashboard') : route('dashboard') }}" class="font-serif italic text-base">
                     Perfecta<span class="text-gold">MENTE</span>
                 </a>
 
                 <div class="hidden sm:flex items-center gap-6">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Hoy
-                    </x-nav-link>
-                    <x-nav-link :href="route('plan.show')" :active="request()->routeIs('plan.show')">
-                        Mi plan
-                    </x-nav-link>
+                    @if ($isNutri)
+                        <x-nav-link :href="route('nutri.dashboard')" :active="request()->routeIs('nutri.dashboard') || request()->routeIs('nutri.patients.*')">
+                            Pacientes
+                        </x-nav-link>
+                        <x-nav-link :href="route('nutri.plans.index')" :active="request()->routeIs('nutri.plans.*')">
+                            Planes
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                            Hoy
+                        </x-nav-link>
+                        <x-nav-link :href="route('plan.show')" :active="request()->routeIs('plan.show')">
+                            Mi plan
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -54,12 +64,21 @@
 
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-white/[0.06]">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                Hoy
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('plan.show')" :active="request()->routeIs('plan.show')">
-                Mi plan
-            </x-responsive-nav-link>
+            @if ($isNutri)
+                <x-responsive-nav-link :href="route('nutri.dashboard')" :active="request()->routeIs('nutri.dashboard')">
+                    Pacientes
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('nutri.plans.index')" :active="request()->routeIs('nutri.plans.*')">
+                    Planes
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    Hoy
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('plan.show')" :active="request()->routeIs('plan.show')">
+                    Mi plan
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <div class="pt-4 pb-1 border-t border-white/[0.06]">

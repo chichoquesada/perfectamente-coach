@@ -96,13 +96,15 @@ class CheckController extends Controller
             return 0;
         }
 
-        $score = DailyCheck::where('date', $date)->get()->sum(
-            fn ($c) => match ($c->status) {
+        // Excluir checks de suplementos/farmacología (prefijo sup-/farm-): no
+        // cuentan para la fidelidad de comidas.
+        $score = DailyCheck::where('date', $date)->get()
+            ->filter(fn ($c) => ! str_starts_with($c->item_id, 'sup-') && ! str_starts_with($c->item_id, 'farm-'))
+            ->sum(fn ($c) => match ($c->status) {
                 'fiel' => 1,
                 'parcial' => 0.5,
                 default => 0,
-            }
-        );
+            });
 
         return (int) round(($score / $totalComidas) * 100);
     }

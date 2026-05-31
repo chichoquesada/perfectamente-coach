@@ -1,5 +1,5 @@
 @php $isNutri = Auth::user()?->isNutritionist(); @endphp
-<nav x-data="{ open: false }" class="bg-bg/80 backdrop-blur border-b border-white/[0.06] sticky top-0 z-50">
+<nav x-data="{ open: false }" class="bg-bg/80 backdrop-blur border-b border-line/[0.06] sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="flex justify-between h-14">
             <div class="flex items-center gap-8">
@@ -26,7 +26,8 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex sm:items-center">
+            <div class="hidden sm:flex sm:items-center gap-2">
+                <x-theme-toggle />
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary transition">
@@ -51,7 +52,8 @@
                 </x-dropdown>
             </div>
 
-            <div class="-me-2 flex items-center sm:hidden">
+            <div class="-me-2 flex items-center gap-1 sm:hidden">
+                <x-theme-toggle />
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-text-primary transition">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -62,7 +64,7 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-white/[0.06]">
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-line/[0.06]">
         <div class="pt-2 pb-3 space-y-1">
             @if ($isNutri)
                 <x-responsive-nav-link :href="route('nutri.dashboard')" :active="request()->routeIs('nutri.dashboard')">
@@ -81,7 +83,7 @@
             @endif
         </div>
 
-        <div class="pt-4 pb-1 border-t border-white/[0.06]">
+        <div class="pt-4 pb-1 border-t border-line/[0.06]">
             <div class="px-4">
                 <div class="font-medium text-base text-text-primary">{{ Auth::user()->name }}</div>
                 <div class="text-sm text-text-secondary">{{ Auth::user()->email }}</div>

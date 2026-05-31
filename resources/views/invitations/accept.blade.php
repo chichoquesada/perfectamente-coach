@@ -8,7 +8,7 @@
     </p>
 
     @if ($existingUser)
-        <div class="bg-bg-card border border-white/[0.06] rounded-xl p-4 mb-4">
+        <div class="bg-bg-card border border-line/[0.06] rounded-xl p-4 mb-4">
             <p class="text-sm text-text-secondary leading-relaxed">
                 Ya existe una cuenta con <strong class="text-text-primary">{{ $email }}</strong>.
                 Inicie sesión y vuelva a este enlace para aceptar la invitación.

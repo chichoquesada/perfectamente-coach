@@ -57,7 +57,7 @@
                 <div x-show="pdfUploading" x-cloak
                      class="absolute inset-0 flex flex-col items-center justify-center bg-bg-card/95 backdrop-blur-sm rounded-2xl">
                     <div class="relative w-12 h-12 mb-3">
-                        <div class="absolute inset-0 rounded-full border-2 border-white/10"></div>
+                        <div class="absolute inset-0 rounded-full border-2 border-line/10"></div>
                         <div class="absolute inset-0 rounded-full border-2 border-gold border-t-transparent animate-spin"></div>
                     </div>
                     <p class="text-sm text-text-secondary">Analizando el PDF con IA… (15-60s)</p>
@@ -70,7 +70,7 @@
             <div class="bg-bg-card border border-gold/20 rounded-2xl p-6 mb-6">
                 <x-input-label value="Cargar desde plantilla (opcional)" />
                 <select @change="loadTemplate($event.target.value)"
-                        class="mt-1 w-full bg-bg border border-white/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition">
+                        class="mt-1 w-full bg-bg border border-line/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition">
                     <option value="">— Empezar de cero —</option>
                     @foreach ($templates as $t)
                         <option value="{{ $t['id'] }}">{{ $t['name'] }}</option>
@@ -81,7 +81,7 @@
         @endif
 
         {{-- Datos generales --}}
-        <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+        <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
             <h2 class="font-serif text-xl mb-4">Datos generales</h2>
             <div class="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -94,7 +94,7 @@
                     <select x-show="!metodologiaCreating"
                             x-model="data.metodologia"
                             @change="onMethodologyChange($event)"
-                            class="mt-1 w-full bg-bg border border-white/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition">
+                            class="mt-1 w-full bg-bg border border-line/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition">
                         <option value="">— Sin metodología —</option>
                         @foreach ($methodologies as $m)
                             <option value="{{ $m->name }}">{{ $m->name }}</option>
@@ -104,7 +104,7 @@
                     <div x-show="metodologiaCreating" x-cloak class="mt-1 flex gap-2">
                         <input type="text" x-ref="newMethod" x-model="data.metodologia"
                                placeholder="Nombre de la metodología"
-                               class="flex-1 bg-bg border border-white/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition">
+                               class="flex-1 bg-bg border border-line/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition">
                         <button type="button" @click="cancelNewMethodology()"
                                 class="shrink-0 text-xs px-3 text-text-secondary hover:text-text-primary transition">Cancelar</button>
                     </div>
@@ -126,7 +126,7 @@
             { key: 'comidas_entreno', label: 'Extras día de entreno', help: 'Se agregan a las comidas regulares cuando el paciente marca día de entreno.' },
             { key: 'comidas_competencia', label: 'Extras día de competencia', help: 'Se agregan en días de competencia.' },
         ]" :key="bucket.key">
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <div class="flex items-start justify-between mb-2 gap-3">
                     <div>
                         <h2 class="font-serif text-xl" x-text="bucket.label"></h2>
@@ -144,31 +144,31 @@
 
                 <div class="space-y-3 mt-3">
                     <template x-for="(comida, idx) in data[bucket.key]" :key="bucket.key + '-' + idx">
-                        <div class="bg-bg/40 border border-white/[0.04] rounded-xl p-4">
+                        <div class="bg-bg/40 border border-line/[0.04] rounded-xl p-4">
                             <div class="grid sm:grid-cols-12 gap-3 mb-3">
                                 <div class="sm:col-span-4">
                                     <label class="block text-xs text-text-secondary mb-1">Nombre</label>
                                     <input type="text" x-model="comida.nombre"
                                            placeholder="Ej: Desayuno"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="sm:col-span-2">
                                     <label class="block text-xs text-text-secondary mb-1">Icono</label>
                                     <input type="text" x-model="comida.icono_sugerido"
                                            placeholder="🍳" maxlength="4"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="sm:col-span-2">
                                     <label class="block text-xs text-text-secondary mb-1">Hora</label>
                                     <input type="text" x-model="comida.hora"
                                            placeholder="08:00"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="sm:col-span-4">
                                     <label class="block text-xs text-text-secondary mb-1">Descripción corta</label>
                                     <input type="text" x-model="comida.descripcion_plan"
                                            placeholder="Ej: 1 vegetal + 2 harinas + 3 PR"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
                                 </div>
                             </div>
 
@@ -178,7 +178,7 @@
                                 </label>
                                 <textarea x-model="comida.opciones_text" rows="4"
                                           placeholder="1 taza de gallo pinto + 2 huevos + vegetal&#10;2 tortillas + 3 huevos + vegetal"
-                                          class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/40 focus:outline-none focus:border-gold/50 resize-none"></textarea>
+                                          class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/40 focus:outline-none focus:border-gold/50 resize-none"></textarea>
                             </div>
 
                             <div class="grid sm:grid-cols-2 gap-3">
@@ -186,7 +186,7 @@
                                     <label class="block text-xs text-text-secondary mb-1">Tip (opcional)</label>
                                     <input type="text" x-model="comida.tip"
                                            placeholder="Ej: Sin azúcar agregado"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="flex items-end justify-end">
                                     <button type="button" @click="removeComida(bucket.key, idx)"
@@ -206,7 +206,7 @@
             { key: 'suplementos', label: 'Suplementos', help: 'Suplementación diaria del paciente. Aparece como checkeable en su tablero.', emoji: '🥤' },
             { key: 'farmacologia', label: 'Farmacología', help: 'Protocolo farmacológico. Aparece como checkeable en su tablero.', emoji: '💊' },
         ]" :key="sec.key">
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <div class="flex items-start justify-between mb-2 gap-3">
                     <div>
                         <h2 class="font-serif text-xl"><span x-text="sec.emoji"></span> <span x-text="sec.label"></span></h2>
@@ -224,25 +224,25 @@
 
                 <div class="space-y-3 mt-3">
                     <template x-for="(item, idx) in data[sec.key]" :key="sec.key + '-' + idx">
-                        <div class="bg-bg/40 border border-white/[0.04] rounded-xl p-4">
+                        <div class="bg-bg/40 border border-line/[0.04] rounded-xl p-4">
                             <div class="grid sm:grid-cols-12 gap-3">
                                 <div class="sm:col-span-4">
                                     <label class="block text-xs text-text-secondary mb-1">Nombre</label>
                                     <input type="text" x-model="item.nombre"
                                            placeholder="Ej: Creatina"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="sm:col-span-3">
                                     <label class="block text-xs text-text-secondary mb-1">Dosis</label>
                                     <input type="text" x-model="item.dosis"
                                            placeholder="Ej: 5 g"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="sm:col-span-4">
                                     <label class="block text-xs text-text-secondary mb-1">Frecuencia / horario</label>
                                     <input type="text" x-model="item.frecuencia"
                                            placeholder="Ej: 1 vez al día, en ayunas"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
                                 </div>
                                 <div class="sm:col-span-1 flex items-end justify-end">
                                     <button type="button" @click="removeItem(sec.key, idx)"
@@ -254,7 +254,7 @@
                                     <label class="block text-xs text-text-secondary mb-1">Nota (opcional)</label>
                                     <input type="text" x-model="item.nota"
                                            placeholder="Ej: Suspender si hay molestias"
-                                           class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
+                                           class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50">
                                 </div>
                             </div>
                         </div>
@@ -264,28 +264,28 @@
         </template>
 
         {{-- Listas adicionales --}}
-        <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+        <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
             <h2 class="font-serif text-xl mb-4">Listas adicionales</h2>
             <div class="grid sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs text-text-secondary mb-1">Evitar (uno por línea)</label>
                     <textarea x-model="lists.evitar_text" rows="3"
-                              class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
+                              class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
                 </div>
                 <div>
                     <label class="block text-xs text-text-secondary mb-1">Proteínas permitidas (una por línea)</label>
                     <textarea x-model="lists.proteinas_text" rows="3"
-                              class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
+                              class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
                 </div>
                 <div>
                     <label class="block text-xs text-text-secondary mb-1">Vegetales permitidos (uno por línea)</label>
                     <textarea x-model="lists.vegetales_text" rows="3"
-                              class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
+                              class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
                 </div>
                 <div>
                     <label class="block text-xs text-text-secondary mb-1">Bebidas permitidas (una por línea)</label>
                     <textarea x-model="lists.bebidas_text" rows="3"
-                              class="w-full bg-bg/50 border border-white/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
+                              class="w-full bg-bg/50 border border-line/[0.08] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold/50 resize-none"></textarea>
                 </div>
             </div>
         </div>
@@ -315,7 +315,7 @@
         <div x-show="previewOpen"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
-             class="absolute inset-x-0 bottom-0 top-14 bg-bg rounded-t-3xl border-t border-white/10 overflow-y-auto p-5">
+             class="absolute inset-x-0 bottom-0 top-14 bg-bg rounded-t-3xl border-t border-line/10 overflow-y-auto p-5">
             <div class="flex justify-end mb-3">
                 <button type="button" @click="previewOpen = false"
                         class="text-sm text-text-secondary hover:text-text-primary transition">Cerrar ✕</button>

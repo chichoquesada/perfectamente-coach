@@ -262,6 +262,7 @@ Route::middleware(['auth', 'verified', 'nutri'])->prefix('nutri')->name('nutri.'
     Route::get('/planes/{plan}/editar', [PlanController::class, 'edit'])->name('plans.edit');
     Route::put('/planes/{plan}', [PlanController::class, 'update'])->name('plans.update');
     Route::post('/planes/{plan}/duplicar', [PlanController::class, 'duplicate'])->name('plans.duplicate');
+    Route::post('/planes/{plan}/asignar', [PlanController::class, 'assign'])->name('plans.assign');
     Route::delete('/planes/{plan}', [PlanController::class, 'destroy'])->name('plans.destroy');
 });
 

@@ -7,6 +7,9 @@
         @include('partials.assets')
     </head>
     <body class="font-sans antialiased bg-bg text-text-primary">
+        <div class="fixed top-4 right-4 z-50">
+            <x-theme-toggle />
+        </div>
         <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
 
             <a href="{{ route('landing') }}" class="inline-block mb-8 text-sm text-text-secondary hover:text-text-primary transition">

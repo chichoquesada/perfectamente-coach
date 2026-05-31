@@ -12,7 +12,7 @@
     </div>
 
     {{-- Datos generales --}}
-    <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-4">
+    <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-4">
         <p class="text-xs text-gold tracking-[0.2em] uppercase mb-2">Plan</p>
         <h3 class="font-serif text-lg leading-tight"
             x-text="(data.paciente && data.paciente.nombre) ? data.paciente.nombre : 'Sin nombre todavía'"
@@ -34,11 +34,11 @@
         { key: 'comidas_competencia', label: 'Extras día de competencia', accent: 'text-gold' },
     ]" :key="bucket.key">
         <div x-show="data[bucket.key] && data[bucket.key].length > 0" x-cloak
-             class="bg-bg-card border border-white/[0.06] rounded-2xl p-4">
+             class="bg-bg-card border border-line/[0.06] rounded-2xl p-4">
             <p class="text-xs tracking-[0.2em] uppercase mb-3" :class="bucket.accent" x-text="bucket.label"></p>
             <div class="space-y-3">
                 <template x-for="(comida, idx) in data[bucket.key]" :key="bucket.key + '-prev-' + idx">
-                    <div class="border-l-2 border-white/10 pl-3">
+                    <div class="border-l-2 border-line/10 pl-3">
                         <div class="flex items-center gap-2">
                             <span x-show="comida.icono_sugerido" x-text="comida.icono_sugerido" class="text-sm"></span>
                             <span class="font-serif text-sm"
@@ -71,7 +71,7 @@
         { key: 'bebidas_text', label: 'Bebidas', icon: '🥤' },
     ]" :key="cat.key">
         <div x-show="previewLines(lists[cat.key]).length" x-cloak
-             class="bg-bg-card border border-white/[0.06] rounded-2xl p-4">
+             class="bg-bg-card border border-line/[0.06] rounded-2xl p-4">
             <div class="flex items-center gap-2 mb-2">
                 <span class="text-sm" x-text="cat.icon"></span>
                 <h4 class="font-serif text-sm" x-text="cat.label"></h4>
@@ -87,7 +87,7 @@
 
     {{-- Evitar --}}
     <div x-show="previewLines(lists.evitar_text).length" x-cloak
-         class="bg-bg-card border border-white/[0.06] rounded-2xl p-4">
+         class="bg-bg-card border border-line/[0.06] rounded-2xl p-4">
         <p class="text-xs text-nofiel tracking-[0.2em] uppercase mb-2">Evitar</p>
         <div class="flex flex-wrap gap-1.5">
             <template x-for="(item, ii) in previewLines(lists.evitar_text)" :key="ii">
@@ -102,7 +102,7 @@
         { key: 'farmacologia', label: 'Farmacología', emoji: '💊' },
     ]" :key="sec.key">
         <div x-show="data[sec.key] && data[sec.key].filter(i => (i.nombre||'').trim()).length" x-cloak
-             class="bg-bg-card border border-white/[0.06] rounded-2xl p-4">
+             class="bg-bg-card border border-line/[0.06] rounded-2xl p-4">
             <p class="text-xs text-gold tracking-[0.2em] uppercase mb-3">
                 <span x-text="sec.emoji"></span> <span x-text="sec.label"></span>
             </p>
@@ -126,7 +126,7 @@
 
     {{-- Estado vacío --}}
     <div x-show="isPlanEmpty()" x-cloak
-         class="bg-bg-card border border-dashed border-white/10 rounded-2xl p-6 text-center">
+         class="bg-bg-card border border-dashed border-line/10 rounded-2xl p-6 text-center">
         <p class="text-xs text-text-secondary/60">El preview se irá llenando a medida que complete el plan.</p>
     </div>
 </div>

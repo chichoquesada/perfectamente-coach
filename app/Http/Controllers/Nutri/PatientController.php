@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Nutri;
 use App\Http\Controllers\Controller;
 use App\Models\DailyCheck;
 use App\Models\DailyMode;
+use App\Models\NutritionalPlan;
 use App\Models\NutritionistPatientNote;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,10 @@ class PatientController extends Controller
             abort(404);
         }
 
-        $plan = $patient->activeNutritionalPlan;
+        // NutritionalPlan/DailyMode/DailyCheck tienen un global scope (BelongsToUser)
+        // que filtra por Auth::id() (el nutri). Para ver los datos del PACIENTE hay
+        // que saltar ese scope; el acceso ya está autorizado por el pivot de arriba.
+        $plan = $patient->activeNutritionalPlan()->withoutGlobalScopes()->first();
         $extracted = $plan?->extracted_data ?? [];
         $comidasBase = $extracted['comidas'] ?? [];
 
@@ -35,11 +39,13 @@ class PatientController extends Controller
         $stats = ['promedio' => 0, 'dias_perfectos' => 0, 'racha_actual' => 0, 'racha_max' => 0, 'dias_con_data' => 0];
 
         if ($plan) {
-            $modesByDate = DailyMode::where('user_id', $patient->id)
+            $modesByDate = DailyMode::withoutGlobalScopes()
+                ->where('user_id', $patient->id)
                 ->whereBetween('date', [$startDate, $today])
                 ->pluck('mode', 'date')->toArray();
 
-            $checksByDate = DailyCheck::where('user_id', $patient->id)
+            $checksByDate = DailyCheck::withoutGlobalScopes()
+                ->where('user_id', $patient->id)
                 ->whereBetween('date', [$startDate, $today])
                 ->get()->groupBy(fn ($c) => $c->date->toDateString());
 
@@ -95,7 +101,16 @@ class PatientController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('nutri.patients.show', compact('patient', 'pivot', 'plan', 'heatmap', 'stats', 'notes'));
+        // Planes/plantillas del nutri para asignar a este paciente.
+        $templates = NutritionalPlan::where('user_id', $nutri->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->extracted_data['paciente']['nombre'] ?? 'Plan sin nombre',
+            ]);
+
+        return view('nutri.patients.show', compact('patient', 'pivot', 'plan', 'heatmap', 'stats', 'notes', 'templates'));
     }
 
     public function storeNote(Request $request, User $patient): RedirectResponse

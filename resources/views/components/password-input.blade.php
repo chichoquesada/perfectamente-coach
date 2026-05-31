@@ -4,7 +4,7 @@
     <input
         @disabled($disabled)
         x-bind:type="show ? 'text' : 'password'"
-        {{ $attributes->merge(['class' => 'w-full bg-bg border border-white/10 text-text-primary placeholder-text-secondary/40 focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 pr-10 text-sm transition']) }}
+        {{ $attributes->merge(['class' => 'w-full bg-bg border border-line/10 text-text-primary placeholder-text-secondary/40 focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 pr-10 text-sm transition']) }}
     >
     <button
         type="button"

@@ -28,14 +28,14 @@
     @endphp
 
     @if (! $plan)
-        <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-8 text-center">
+        <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-8 text-center">
             <p class="text-text-secondary">No tiene plan activo.</p>
             <a href="{{ route('onboarding.show') }}" class="inline-block mt-4 text-gold underline text-sm">Subir mi plan</a>
         </div>
     @else
         {{-- Resumen del paciente --}}
         @if (array_filter($paciente))
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-gold tracking-[0.25em] uppercase mb-3">Paciente</p>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                     @if (! empty($paciente['nombre']))
@@ -71,7 +71,7 @@
             $hayPermitidos = collect($categoriasOrden)->keys()->contains(fn ($k) => ! empty($permitidos[$k] ?? null));
         @endphp
         @if ($hayPermitidos)
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-fiel tracking-[0.25em] uppercase mb-4">Permitidos</p>
                 <div class="space-y-5">
                     @foreach ($categoriasOrden as $key => [$label, $icon])
@@ -98,7 +98,7 @@
 
         {{-- Evitar --}}
         @if (count($evitar) > 0)
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-nofiel tracking-[0.25em] uppercase mb-4">Evitar</p>
                 <div class="flex flex-wrap gap-1.5">
                     @foreach ($evitar as $item)
@@ -112,7 +112,7 @@
 
         {{-- Suplementos (estructurados) --}}
         @if (count($suplementos) > 0)
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-gold tracking-[0.25em] uppercase mb-4">🥤 Suplementos</p>
                 <div class="space-y-3">
                     @foreach ($suplementos as $s)
@@ -134,7 +134,7 @@
             </div>
         @elseif (count($supDiarios) > 0 || count($supEntreno) > 0)
             {{-- Fallback legacy: lista plana --}}
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-gold tracking-[0.25em] uppercase mb-4">Suplementos</p>
                 <ul class="space-y-1.5">
                     @foreach (array_merge($supDiarios, $supEntreno) as $s)
@@ -149,7 +149,7 @@
 
         {{-- Farmacología (estructurada) --}}
         @if (count($farmacologia) > 0)
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-gold tracking-[0.25em] uppercase mb-4">💊 Farmacología</p>
                 <div class="space-y-3">
                     @foreach ($farmacologia as $f)
@@ -181,7 +181,7 @@
 
         {{-- Validación de IA --}}
         @if ($validacion && ! empty($validacion['advertencias'] ?? []))
-            <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 mb-6">
+            <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 mb-6">
                 <p class="text-xs text-text-secondary tracking-[0.25em] uppercase mb-3">Notas de extracción</p>
                 <p class="text-xs text-text-secondary mb-2">
                     Completitud detectada:

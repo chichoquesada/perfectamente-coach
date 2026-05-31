@@ -20,7 +20,7 @@
     @endphp
 
     @if (! $plan)
-        <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-8 text-center">
+        <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-8 text-center">
             <div class="text-5xl font-serif italic text-gold mb-4">~</div>
             <h2 class="font-serif text-xl mb-2">Aún no ha subido su plan</h2>
             <p class="text-text-secondary text-sm mb-6 max-w-sm mx-auto">
@@ -35,7 +35,7 @@
     <div class="lg:col-span-2 space-y-6">
         <div
             x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}')"
-            class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8"
+            class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 sm:p-8"
         >
             <div class="flex items-start justify-between gap-4 mb-6">
                 <div>
@@ -48,7 +48,7 @@
                     @endif
                 </div>
                 @if ($metodologia)
-                    <span class="shrink-0 text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-full text-text-secondary">
+                    <span class="shrink-0 text-xs px-3 py-1 bg-line/5 border border-line/10 rounded-full text-text-secondary">
                         {{ $metodologia }}
                     </span>
                 @endif
@@ -57,7 +57,7 @@
             {{-- Selector de modo del día --}}
             <div class="mb-6">
                 <p class="text-xs text-text-secondary tracking-wider uppercase mb-2">Hoy es día de</p>
-                <div class="grid grid-cols-3 gap-2 bg-bg/50 border border-white/[0.06] p-1 rounded-full">
+                <div class="grid grid-cols-3 gap-2 bg-bg/50 border border-line/[0.06] p-1 rounded-full">
                     @foreach ([
                         'descanso' => ['Descanso', '🛌'],
                         'entreno' => ['Entreno', '💪'],
@@ -78,15 +78,15 @@
             </div>
 
             <div class="grid grid-cols-3 gap-3 text-center mb-6">
-                <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3">
+                <div class="bg-bg/50 border border-line/[0.06] rounded-xl py-3">
                     <div class="font-serif text-2xl text-gold">{{ count($comidas) }}</div>
                     <div class="text-xs text-text-secondary mt-1">Comidas</div>
                 </div>
-                <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3">
+                <div class="bg-bg/50 border border-line/[0.06] rounded-xl py-3">
                     <div class="font-serif text-2xl text-gold">{{ $totalSupFarma }}</div>
                     <div class="text-xs text-text-secondary mt-1">Sup/Fármacos</div>
                 </div>
-                <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3">
+                <div class="bg-bg/50 border border-line/[0.06] rounded-xl py-3">
                     <div class="font-serif text-2xl text-gold" x-text="fidelidad + '%'"></div>
                     <div class="text-xs text-text-secondary mt-1">Fidelidad hoy</div>
                 </div>
@@ -104,11 +104,11 @@
                                 'border-fiel': checks['{{ $itemId }}'] === 'fiel',
                                 'border-parcial': checks['{{ $itemId }}'] === 'parcial',
                                 'border-nofiel': checks['{{ $itemId }}'] === 'nofiel',
-                                'border-white/[0.04]': !checks['{{ $itemId }}'],
+                                'border-line/[0.04]': !checks['{{ $itemId }}'],
                             }"
                         >
                             <div class="flex items-center gap-3 p-3">
-                                <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg text-xl shrink-0">
+                                <div class="w-10 h-10 flex items-center justify-center bg-line/5 rounded-lg text-xl shrink-0">
                                     {{ $c['icono_sugerido'] ?? '🍽️' }}
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -145,7 +145,7 @@
                                         'bg-fiel border-fiel text-black': checks['{{ $itemId }}'] === 'fiel',
                                         'bg-parcial border-parcial text-black': checks['{{ $itemId }}'] === 'parcial',
                                         'bg-nofiel border-nofiel text-white': checks['{{ $itemId }}'] === 'nofiel',
-                                        'border-white/15 text-text-secondary hover:border-white/30': !checks['{{ $itemId }}'],
+                                        'border-line/15 text-text-secondary hover:border-line/30': !checks['{{ $itemId }}'],
                                         'opacity-40': loading['{{ $itemId }}']
                                     }"
                                     class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
@@ -168,7 +168,7 @@
                                     placeholder="¿Qué pasó? (opcional, ayuda al análisis IA)"
                                     rows="2"
                                     maxlength="500"
-                                    class="w-full bg-bg border border-white/10 text-text-primary placeholder-text-secondary/40 focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition resize-none"
+                                    class="w-full bg-bg border border-line/10 text-text-primary placeholder-text-secondary/40 focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-2 text-sm transition resize-none"
                                 ></textarea>
                                 <div class="flex items-center justify-between mt-2 gap-3">
                                     <span class="text-xs text-text-secondary/40" x-text="(noteDraft || '').length + '/500'"></span>
@@ -203,7 +203,7 @@
             </p>
 
             @if ($totalSupFarma > 0)
-                <div class="mt-8 pt-6 border-t border-white/[0.06]">
+                <div class="mt-8 pt-6 border-t border-line/[0.06]">
                     @foreach ([
                         ['items' => $suplementos, 'label' => '🥤 Suplementos'],
                         ['items' => $farmacologia, 'label' => '💊 Farmacología'],
@@ -222,7 +222,7 @@
                                             'border-fiel': checks['{{ $sid }}'] === 'fiel',
                                             'border-parcial': checks['{{ $sid }}'] === 'parcial',
                                             'border-nofiel': checks['{{ $sid }}'] === 'nofiel',
-                                            'border-white/[0.04]': !checks['{{ $sid }}'],
+                                            'border-line/[0.04]': !checks['{{ $sid }}'],
                                         }"
                                     >
                                         <div class="flex items-center gap-3 p-3">
@@ -243,7 +243,7 @@
                                                     'bg-fiel border-fiel text-black': checks['{{ $sid }}'] === 'fiel',
                                                     'bg-parcial border-parcial text-black': checks['{{ $sid }}'] === 'parcial',
                                                     'bg-nofiel border-nofiel text-white': checks['{{ $sid }}'] === 'nofiel',
-                                                    'border-white/15 text-text-secondary hover:border-white/30': !checks['{{ $sid }}'],
+                                                    'border-line/15 text-text-secondary hover:border-line/30': !checks['{{ $sid }}'],
                                                     'opacity-40': loading['{{ $sid }}']
                                                 }"
                                                 class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
@@ -271,7 +271,7 @@
         <div
             x-data="weeklyInsight()"
             x-init="loadFromCache()"
-            class="bg-bg-card border border-white/[0.06] rounded-2xl p-6"
+            class="bg-bg-card border border-line/[0.06] rounded-2xl p-6"
         >
             <div class="flex items-baseline justify-between mb-4">
                 <p class="text-xs text-gold tracking-[0.25em] uppercase">Análisis IA</p>
@@ -296,7 +296,7 @@
 
             <template x-if="loading">
                 <div class="text-center py-6" x-cloak>
-                    <div class="w-10 h-10 mx-auto rounded-full border-2 border-white/10 border-t-gold animate-spin"></div>
+                    <div class="w-10 h-10 mx-auto rounded-full border-2 border-line/10 border-t-gold animate-spin"></div>
                     <p class="text-xs text-text-secondary mt-3">Leyendo su semana…</p>
                 </div>
             </template>
@@ -348,13 +348,13 @@
                 $rangeLabel = ['7' => 'Su semana', '30' => 'Su mes', '90' => 'Sus 90 días'][(string) $range] ?? 'Su mes';
                 $isCompact = $range > 7;
             @endphp
-            <div x-data="dayDetail()" class="bg-bg-card border border-white/[0.06] rounded-2xl p-6">
+            <div x-data="dayDetail()" class="bg-bg-card border border-line/[0.06] rounded-2xl p-6">
                 <div class="flex items-baseline justify-between mb-4">
                     <p class="text-xs text-gold tracking-[0.25em] uppercase">{{ $rangeLabel }}</p>
                 </div>
 
                 {{-- Selector de rango --}}
-                <div class="grid grid-cols-3 gap-1 bg-bg/50 border border-white/[0.06] p-1 rounded-full mb-5 text-xs">
+                <div class="grid grid-cols-3 gap-1 bg-bg/50 border border-line/[0.06] p-1 rounded-full mb-5 text-xs">
                     @foreach (['7' => 'Semana', '30' => 'Mes', '90' => '90 días'] as $r => $lbl)
                         <a
                             href="{{ route('dashboard', ['range' => $r]) }}"
@@ -366,19 +366,19 @@
                 {{-- Stats --}}
                 @if ($heatmapStats['dias_con_data'] > 0)
                     <div class="grid grid-cols-4 gap-2 mb-5 text-center">
-                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                        <div class="bg-bg/50 border border-line/[0.06] rounded-lg py-2">
                             <div class="font-serif text-base text-gold">{{ $heatmapStats['promedio'] }}%</div>
                             <div class="text-[10px] text-text-secondary mt-0.5">Promedio</div>
                         </div>
-                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                        <div class="bg-bg/50 border border-line/[0.06] rounded-lg py-2">
                             <div class="font-serif text-base text-fiel">{{ $heatmapStats['dias_perfectos'] }}</div>
                             <div class="text-[10px] text-text-secondary mt-0.5">Perfectos</div>
                         </div>
-                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                        <div class="bg-bg/50 border border-line/[0.06] rounded-lg py-2">
                             <div class="font-serif text-base text-gold">{{ $heatmapStats['racha_actual'] }}</div>
                             <div class="text-[10px] text-text-secondary mt-0.5">Racha</div>
                         </div>
-                        <div class="bg-bg/50 border border-white/[0.06] rounded-lg py-2">
+                        <div class="bg-bg/50 border border-line/[0.06] rounded-lg py-2">
                             <div class="font-serif text-base text-text-primary">{{ $heatmapStats['racha_max'] }}</div>
                             <div class="text-[10px] text-text-secondary mt-0.5">Máxima</div>
                         </div>
@@ -401,8 +401,8 @@
                         @php
                             $f = $day['fidelidad'];
                             if ($f === null) {
-                                $bg = 'bg-white/[0.03]';
-                                $border = 'border-white/[0.04]';
+                                $bg = 'bg-line/[0.03]';
+                                $border = 'border-line/[0.04]';
                                 $textColor = 'text-text-secondary/40';
                             } elseif ($f === 100) {
                                 $bg = 'bg-gold/25';
@@ -430,7 +430,7 @@
                             title="{{ $day['date'] }}{{ $f !== null ? ' — '.$f.'%' : ' — sin checks' }}"
                         >
                             <div
-                                class="aspect-square rounded-md border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition group-hover:border-white/30 cursor-pointer"
+                                class="aspect-square rounded-md border flex flex-col items-center justify-center {{ $bg }} {{ $border }} {{ $todayRing }} transition group-hover:border-line/30 cursor-pointer"
                             >
                                 <div class="text-[9px] text-text-secondary/60 leading-none">{{ $day['day'] }}</div>
                                 @if (! $isCompact)
@@ -472,7 +472,7 @@
                     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
                     @click.self="close()"
                 >
-                    <div class="w-full max-w-md bg-bg-card border border-white/[0.08] rounded-2xl p-6 max-h-[85vh] overflow-y-auto">
+                    <div class="w-full max-w-md bg-bg-card border border-line/[0.08] rounded-2xl p-6 max-h-[85vh] overflow-y-auto">
                         <div class="flex items-start justify-between gap-4 mb-5">
                             <div>
                                 <p class="text-xs text-gold tracking-[0.25em] uppercase mb-1" x-text="data?.mode || ''"></p>
@@ -483,13 +483,13 @@
 
                         <template x-if="loading">
                             <div class="text-center py-8">
-                                <div class="w-8 h-8 mx-auto rounded-full border-2 border-white/10 border-t-gold animate-spin"></div>
+                                <div class="w-8 h-8 mx-auto rounded-full border-2 border-line/10 border-t-gold animate-spin"></div>
                             </div>
                         </template>
 
                         <template x-if="!loading && data">
                             <div>
-                                <div class="bg-bg/50 border border-white/[0.06] rounded-xl py-3 text-center mb-5">
+                                <div class="bg-bg/50 border border-line/[0.06] rounded-xl py-3 text-center mb-5">
                                     <div class="font-serif text-3xl text-gold" x-text="data.fidelidad + '%'"></div>
                                     <div class="text-xs text-text-secondary mt-1">Fidelidad del día</div>
                                 </div>
@@ -502,11 +502,11 @@
                                                 'border-fiel': item.status === 'fiel',
                                                 'border-parcial': item.status === 'parcial',
                                                 'border-nofiel': item.status === 'nofiel',
-                                                'border-white/[0.04]': !item.status,
+                                                'border-line/[0.04]': !item.status,
                                             }"
                                         >
                                             <div class="flex items-center gap-3">
-                                                <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg text-base shrink-0" x-text="item.icono"></div>
+                                                <div class="w-9 h-9 flex items-center justify-center bg-line/5 rounded-lg text-base shrink-0" x-text="item.icono"></div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="text-[10px] text-text-secondary uppercase tracking-wider" x-text="item.hora || '—'"></div>
                                                     <div class="font-serif text-sm truncate" x-text="item.nombre"></div>
@@ -517,7 +517,7 @@
                                                         'bg-fiel text-black': item.status === 'fiel',
                                                         'bg-parcial text-black': item.status === 'parcial',
                                                         'bg-nofiel text-white': item.status === 'nofiel',
-                                                        'border border-white/15 text-text-secondary/50': !item.status,
+                                                        'border border-line/15 text-text-secondary/50': !item.status,
                                                     }"
                                                     x-text="{ fiel: '✓', parcial: '~', nofiel: '✗' }[item.status] || ''"
                                                 ></div>

@@ -20,7 +20,7 @@
 
         <div class="flex items-center justify-between mt-4">
             <label for="remember_me" class="inline-flex items-center text-sm text-text-secondary cursor-pointer">
-                <input id="remember_me" type="checkbox" class="rounded bg-bg border-white/15 text-gold focus:ring-gold focus:ring-offset-0" name="remember">
+                <input id="remember_me" type="checkbox" class="rounded bg-bg border-line/15 text-gold focus:ring-gold focus:ring-offset-0" name="remember">
                 <span class="ms-2">Recordarme</span>
             </label>
 

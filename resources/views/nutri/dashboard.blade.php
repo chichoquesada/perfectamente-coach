@@ -12,21 +12,21 @@
 
     <div x-data="{ open: false }" x-cloak>
     <div class="grid grid-cols-3 gap-3 mb-6">
-        <div class="bg-bg-card border border-white/[0.06] rounded-xl p-4 text-center">
+        <div class="bg-bg-card border border-line/[0.06] rounded-xl p-4 text-center">
             <div class="font-serif text-2xl text-gold">{{ $counts['active'] }}</div>
             <div class="text-xs text-text-secondary mt-1">Pacientes activos</div>
         </div>
-        <div class="bg-bg-card border border-white/[0.06] rounded-xl p-4 text-center">
+        <div class="bg-bg-card border border-line/[0.06] rounded-xl p-4 text-center">
             <div class="font-serif text-2xl text-text-primary">{{ $counts['invited'] }}</div>
             <div class="text-xs text-text-secondary mt-1">Invitaciones pendientes</div>
         </div>
-        <div class="bg-bg-card border border-white/[0.06] rounded-xl p-4 text-center">
+        <div class="bg-bg-card border border-line/[0.06] rounded-xl p-4 text-center">
             <div class="font-serif text-2xl text-text-secondary/60">{{ $counts['archived'] }}</div>
             <div class="text-xs text-text-secondary mt-1">Archivados</div>
         </div>
     </div>
 
-    <div class="bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-8">
+    <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 sm:p-8">
         <div class="flex items-center justify-between mb-6">
             <h2 class="font-serif text-xl">Pacientes</h2>
             <button type="button" @click="open = true"
@@ -51,7 +51,7 @@
                 @foreach ($patients as $p)
                     @if ($p->pivot->status === 'active')
                         <a href="{{ route('nutri.patients.show', $p) }}"
-                           class="flex items-center justify-between bg-bg/50 border border-white/[0.04] rounded-xl p-3 hover:border-gold/30 transition">
+                           class="flex items-center justify-between bg-bg/50 border border-line/[0.04] rounded-xl p-3 hover:border-gold/30 transition">
                             <div class="min-w-0">
                                 <div class="font-serif text-base truncate">{{ $p->name ?? $p->pivot->invitation_email }}</div>
                                 <div class="text-xs text-text-secondary truncate">{{ $p->email ?? $p->pivot->invitation_email }}</div>
@@ -61,14 +61,14 @@
                             </span>
                         </a>
                     @else
-                        <div class="flex items-center justify-between bg-bg/50 border border-white/[0.04] rounded-xl p-3">
+                        <div class="flex items-center justify-between bg-bg/50 border border-line/[0.04] rounded-xl p-3">
                             <div class="min-w-0">
                                 <div class="font-serif text-base truncate">{{ $p->name ?? $p->pivot->invitation_email }}</div>
                                 <div class="text-xs text-text-secondary truncate">{{ $p->email ?? $p->pivot->invitation_email }}</div>
                             </div>
                             <span class="shrink-0 text-xs px-3 py-1 rounded-full
                                 @if ($p->pivot->status === 'invited') bg-parcial/15 text-parcial border border-parcial/30
-                                @else bg-white/5 text-text-secondary border border-white/10
+                                @else bg-line/5 text-text-secondary border border-line/10
                                 @endif">
                                 {{ ['invited' => 'Invitado', 'archived' => 'Archivado'][$p->pivot->status] ?? $p->pivot->status }}
                             </span>
@@ -84,7 +84,7 @@
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
          @keydown.escape.window="open = false"
          @click.self="open = false">
-        <div class="bg-bg-card border border-white/[0.08] rounded-2xl p-6 sm:p-8 w-full max-w-md"
+        <div class="bg-bg-card border border-line/[0.08] rounded-2xl p-6 sm:p-8 w-full max-w-md"
              @click.stop x-transition>
             <h3 class="font-serif text-xl mb-2">Invitar paciente</h3>
             <p class="text-sm text-text-secondary mb-5 leading-relaxed">

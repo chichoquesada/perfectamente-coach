@@ -44,7 +44,7 @@
                 setTimeout(tick, 2000);
             }
         }"
-        class="relative bg-bg-card border border-white/[0.06] rounded-2xl p-6 sm:p-10"
+        class="relative bg-bg-card border border-line/[0.06] rounded-2xl p-6 sm:p-10"
     >
         <form action="{{ route('onboarding.upload') }}" method="POST" enctype="multipart/form-data" @submit="submit($event)" :class="uploading ? 'opacity-30 pointer-events-none' : ''">
             @csrf
@@ -54,7 +54,7 @@
                 @dragover.prevent="dragging = true"
                 @dragleave.prevent="dragging = false"
                 @drop.prevent="dragging = false; select($event.dataTransfer.files[0])"
-                :class="dragging ? 'border-gold bg-gold/5' : 'border-white/15 hover:border-white/30'"
+                :class="dragging ? 'border-gold bg-gold/5' : 'border-line/15 hover:border-line/30'"
                 class="block border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition"
             >
                 <input
@@ -110,7 +110,7 @@
             class="absolute inset-0 flex flex-col items-center justify-center bg-bg-card/95 backdrop-blur-sm rounded-2xl"
         >
             <div class="relative w-20 h-20 mb-6">
-                <div class="absolute inset-0 rounded-full border-2 border-white/10"></div>
+                <div class="absolute inset-0 rounded-full border-2 border-line/10"></div>
                 <div class="absolute inset-0 rounded-full border-2 border-gold border-t-transparent animate-spin"></div>
                 <div class="absolute inset-0 flex items-center justify-center text-3xl" x-text="stages[stage].icon"></div>
             </div>
@@ -123,7 +123,7 @@
             <div class="mt-6 flex gap-1.5">
                 <template x-for="(s, i) in stages" :key="i">
                     <div
-                        :class="i <= stage ? 'bg-gold w-8' : 'bg-white/10 w-3'"
+                        :class="i <= stage ? 'bg-gold w-8' : 'bg-line/10 w-3'"
                         class="h-1 rounded-full transition-all duration-500"
                     ></div>
                 </template>

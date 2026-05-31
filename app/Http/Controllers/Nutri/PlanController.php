@@ -23,7 +23,12 @@ class PlanController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('nutri.plans.index', compact('plans'));
+        // Pacientes activos del nutri para el selector de "Asignar".
+        $patients = Auth::user()->activePatients()
+            ->orderBy('users.name')
+            ->get(['users.id', 'users.name', 'users.email']);
+
+        return view('nutri.plans.index', compact('plans', 'patients'));
     }
 
     public function create(): View
@@ -151,6 +156,59 @@ class PlanController extends Controller
         ]);
 
         return redirect()->route('nutri.plans.edit', $copy)->with('status', 'Plan duplicado. Modifíquelo y guarde.');
+    }
+
+    /**
+     * Asigna un plan/plantilla a un paciente: clona el plan con user_id = paciente,
+     * lo deja activo (desactivando el plan previo del paciente) y nombra el plan
+     * "{nombre del paciente} - Plan {N}" con N autonumérico por paciente.
+     */
+    public function assign(Request $request, NutritionalPlan $plan): RedirectResponse
+    {
+        $this->authorizeOwn($plan);
+
+        $nutri = Auth::user();
+
+        $data = $request->validate([
+            'patient_id' => ['required', 'integer'],
+        ]);
+
+        // El destinatario debe ser un paciente ACTIVO de este nutri.
+        $patient = $nutri->activePatients()
+            ->where('users.id', $data['patient_id'])
+            ->first();
+
+        if (! $patient) {
+            abort(404);
+        }
+
+        // OJO: NutritionalPlan tiene un global scope (BelongsToUser) que filtra
+        // por user_id = Auth::id() (el nutri). Para operar sobre los planes del
+        // PACIENTE hay que saltar ese scope explícitamente.
+
+        // Autonumérico: cuántos planes tiene ya el paciente + 1.
+        $n = NutritionalPlan::withoutGlobalScopes()
+            ->where('user_id', $patient->id)->count() + 1;
+
+        $extracted = $plan->extracted_data ?? [];
+        $extracted['paciente'] = $extracted['paciente'] ?? [];
+        $extracted['paciente']['nombre'] = trim($patient->name).' - Plan '.$n;
+
+        // Desactivar el plan activo previo del paciente (1 activo a la vez).
+        NutritionalPlan::withoutGlobalScopes()
+            ->where('user_id', $patient->id)
+            ->where('is_active', true)
+            ->update(['is_active' => false]);
+
+        NutritionalPlan::create([
+            'user_id' => $patient->id,
+            'extracted_data' => $extracted,
+            'metodologia' => $plan->metodologia,
+            'objetivo_principal' => $plan->objetivo_principal,
+            'is_active' => true,
+        ]);
+
+        return back()->with('status', $extracted['paciente']['nombre'].' asignado a '.$patient->name.'.');
     }
 
     private function authorizeOwn(NutritionalPlan $plan): void

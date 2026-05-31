@@ -36,6 +36,32 @@
 
         <input type="hidden" name="plan_data" x-ref="payload">
 
+        {{-- Empezar desde un PDF (solo al crear) --}}
+        @if ($plan === null)
+            <div class="bg-bg-card border border-gold/20 rounded-2xl p-6 mb-6 relative">
+                <x-input-label value="Empezar desde un PDF (opcional)" />
+                <p class="text-xs text-text-secondary/60 mb-3">Suba el PDF del plan y la IA lo lee y rellena el formulario. Después revíselo y ajuste antes de guardar.</p>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <label class="inline-flex items-center gap-2 text-sm cursor-pointer bg-gold text-black px-4 py-2 rounded-full font-bold hover:bg-gold/90 transition"
+                           :class="pdfUploading ? 'opacity-40 pointer-events-none' : ''">
+                        <span>📄 Subir PDF y analizar</span>
+                        <input type="file" accept="application/pdf" class="hidden" @change="uploadPdf($event)">
+                    </label>
+                    <span x-show="pdfFileName" x-text="pdfFileName" x-cloak class="text-xs text-text-secondary"></span>
+                </div>
+                <p x-show="pdfError" x-text="pdfError" x-cloak class="text-nofiel text-sm mt-2"></p>
+
+                <div x-show="pdfUploading" x-cloak
+                     class="absolute inset-0 flex flex-col items-center justify-center bg-bg-card/95 backdrop-blur-sm rounded-2xl">
+                    <div class="relative w-12 h-12 mb-3">
+                        <div class="absolute inset-0 rounded-full border-2 border-white/10"></div>
+                        <div class="absolute inset-0 rounded-full border-2 border-gold border-t-transparent animate-spin"></div>
+                    </div>
+                    <p class="text-sm text-text-secondary">Analizando el PDF con IA… (15-60s)</p>
+                </div>
+            </div>
+        @endif
+
         {{-- Cargar desde plantilla (solo al crear) --}}
         @if ($plan === null && ($templates ?? collect())->isNotEmpty())
             <div class="bg-bg-card border border-gold/20 rounded-2xl p-6 mb-6">
@@ -320,6 +346,9 @@
                 templates: templates || [],
                 methodologyNames: methodologyNames || [],
                 metodologiaCreating: false,
+                pdfUploading: false,
+                pdfError: null,
+                pdfFileName: '',
 
                 init() {
                     this.metodologiaCreating = !!this.data.metodologia
@@ -336,6 +365,46 @@
                 cancelNewMethodology() {
                     this.metodologiaCreating = false;
                     this.data.metodologia = '';
+                },
+
+                applyExtracted(raw) {
+                    const h = hydrate(raw);
+                    this.data = h.data;
+                    this.lists = h.lists;
+                    this.metodologiaCreating = !!this.data.metodologia
+                        && !this.methodologyNames.includes(this.data.metodologia);
+                },
+
+                async uploadPdf(e) {
+                    const f = e.target.files[0];
+                    e.target.value = ''; // permite re-subir el mismo archivo
+                    if (!f) return;
+                    if (f.type !== 'application/pdf') { this.pdfError = 'El archivo debe ser un PDF.'; return; }
+                    if (f.size > 10 * 1024 * 1024) { this.pdfError = 'Máximo 10 MB.'; return; }
+                    this.pdfError = null;
+                    this.pdfFileName = f.name;
+                    this.pdfUploading = true;
+                    try {
+                        const fd = new FormData();
+                        fd.append('pdf', f);
+                        const res = await fetch('{{ route('nutri.plans.extractPdf') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            },
+                            body: fd,
+                        });
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+                        this.applyExtracted(json.data);
+                    } catch (err) {
+                        console.error('pdf extract failed', err);
+                        this.pdfError = err.message || 'No se pudo procesar el PDF.';
+                        this.pdfFileName = '';
+                    } finally {
+                        this.pdfUploading = false;
+                    }
                 },
 
                 loadTemplate(id) {

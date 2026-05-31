@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Nutri;
 use App\Http\Controllers\Controller;
 use App\Models\Methodology;
 use App\Models\NutritionalPlan;
+use App\Services\GeminiExtractorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -44,6 +48,51 @@ class PlanController extends Controller
             'methodologies' => $this->methodologyOptions(),
             'templates' => collect(),
         ]);
+    }
+
+    /**
+     * Sube un PDF y lo extrae con Gemini para PRE-LLENAR el editor.
+     * NO crea un plan: devuelve el JSON normalizado para que el nutri revise,
+     * edite y luego guarde con el flujo normal de store().
+     */
+    public function extractPdf(Request $request, GeminiExtractorService $gemini): JsonResponse
+    {
+        $request->validate([
+            'pdf' => ['required', 'file', 'mimetypes:application/pdf', 'max:10240'],
+        ], [
+            'pdf.required' => 'Suba un PDF.',
+            'pdf.mimetypes' => 'El archivo debe ser un PDF válido.',
+            'pdf.max' => 'Máximo 10 MB.',
+        ]);
+
+        // Guardamos temporal solo para que Gemini lo lea; lo borramos al final.
+        $path = $request->file('pdf')->store('plans/'.Auth::id().'/tmp');
+        $absolutePath = Storage::path($path);
+
+        set_time_limit(180);
+
+        try {
+            $extracted = $gemini->extractPlanFromPdf($absolutePath);
+        } catch (\Throwable $e) {
+            Log::error('Gemini extraction (nutri) failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+            Storage::delete($path);
+
+            return response()->json([
+                'error' => 'No pudimos leer el PDF. Verifique que tenga texto legible (no escaneado) e intente de nuevo.',
+            ], 422);
+        }
+
+        Storage::delete($path);
+
+        // Normalizamos al shape del editor (incluye migrar suplementos planos a estructurado).
+        $data = $this->migrateLegacySupplements(
+            array_merge($this->emptyShape(), is_array($extracted) ? $extracted : [])
+        );
+
+        return response()->json(['data' => $data]);
     }
 
     public function store(Request $request): RedirectResponse

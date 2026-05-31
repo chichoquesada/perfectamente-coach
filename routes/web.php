@@ -257,6 +257,7 @@ Route::middleware(['auth', 'verified', 'nutri'])->prefix('nutri')->name('nutri.'
 
     Route::get('/planes', [PlanController::class, 'index'])->name('plans.index');
     Route::get('/planes/nuevo', [PlanController::class, 'create'])->name('plans.create');
+    Route::post('/planes/extraer-pdf', [PlanController::class, 'extractPdf'])->name('plans.extractPdf');
     Route::post('/planes', [PlanController::class, 'store'])->name('plans.store');
     Route::get('/planes/{plan}/editar', [PlanController::class, 'edit'])->name('plans.edit');
     Route::put('/planes/{plan}', [PlanController::class, 'update'])->name('plans.update');

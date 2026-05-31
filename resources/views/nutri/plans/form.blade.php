@@ -23,14 +23,17 @@
         </div>
     @endif
 
-    <form method="POST"
-          action="{{ $plan ? route('nutri.plans.update', $plan) : route('nutri.plans.store') }}"
-          x-data="planEditor(
+    <div x-data="planEditor(
               {{ \Illuminate\Support\Js::from($extracted) }},
               {{ \Illuminate\Support\Js::from($templates ?? collect()) }},
               {{ \Illuminate\Support\Js::from($methodologies->pluck('name')) }}
           )"
-          @submit="syncToHidden()">
+         class="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6 lg:items-start">
+
+    <form method="POST"
+          action="{{ $plan ? route('nutri.plans.update', $plan) : route('nutri.plans.store') }}"
+          @submit="syncToHidden()"
+          class="min-w-0">
         @csrf
         @if ($plan) @method('PUT') @endif
 
@@ -295,6 +298,34 @@
         </div>
     </form>
 
+    {{-- Panel de vista previa (desktop): pegado al scroll --}}
+    <aside class="hidden lg:block lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto -mr-1 pr-1">
+        <x-plan-preview />
+    </aside>
+
+    {{-- Botón flotante para abrir el preview (móvil) --}}
+    <button type="button" @click="previewOpen = true"
+            class="lg:hidden fixed bottom-5 right-5 z-30 flex items-center gap-2 bg-gold text-black px-4 py-3 rounded-full font-bold shadow-lg shadow-black/40">
+        <span>👁</span><span>Vista previa</span>
+    </button>
+
+    {{-- Overlay del preview (móvil) --}}
+    <div x-show="previewOpen" x-cloak class="lg:hidden fixed inset-0 z-40">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="previewOpen = false"></div>
+        <div x-show="previewOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+             class="absolute inset-x-0 bottom-0 top-14 bg-bg rounded-t-3xl border-t border-white/10 overflow-y-auto p-5">
+            <div class="flex justify-end mb-3">
+                <button type="button" @click="previewOpen = false"
+                        class="text-sm text-text-secondary hover:text-text-primary transition">Cerrar ✕</button>
+            </div>
+            <x-plan-preview />
+        </div>
+    </div>
+
+    </div>{{-- /grid wrapper x-data --}}
+
     <script>
         function planEditor(initial, templates, methodologyNames) {
             const arrayToText = (arr) => Array.isArray(arr) ? arr.join('\n') : '';
@@ -349,6 +380,24 @@
                 pdfUploading: false,
                 pdfError: null,
                 pdfFileName: '',
+                previewOpen: false,
+
+                // Helpers de la vista previa
+                previewLines(txt) {
+                    return (txt || '').split('\n').map(s => s.trim()).filter(s => s.length > 0);
+                },
+                isPlanEmpty() {
+                    const d = this.data, l = this.lists;
+                    const noComidas = ['comidas', 'comidas_entreno', 'comidas_competencia']
+                        .every(k => !(d[k] || []).length);
+                    const noItems = ['suplementos', 'farmacologia']
+                        .every(k => !(d[k] || []).filter(i => (i.nombre || '').trim()).length);
+                    const noListas = ['evitar_text', 'proteinas_text', 'vegetales_text', 'bebidas_text']
+                        .every(k => !this.previewLines(l[k]).length);
+                    const noGenerales = !(d.paciente && d.paciente.nombre) && !d.metodologia
+                        && !(d.objetivos && (d.objetivos.principal || d.objetivos.secundario));
+                    return noComidas && noItems && noListas && noGenerales;
+                },
 
                 init() {
                     this.metodologiaCreating = !!this.data.metodologia

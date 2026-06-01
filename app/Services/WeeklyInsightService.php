@@ -119,6 +119,10 @@ class WeeklyInsightService
         $byMeal = [];
 
         foreach ($checks as $c) {
+            // 'na' (no aplica ese día) se ignora: no aporta al análisis.
+            if ($c->status === 'na') {
+                continue;
+            }
             $weight = match ($c->status) {
                 'fiel' => 1, 'parcial' => 0.5, default => 0,
             };

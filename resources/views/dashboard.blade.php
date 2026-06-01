@@ -54,6 +54,9 @@
                     @if ($objetivo)
                         <p class="text-sm text-text-secondary">{{ $objetivo }}</p>
                     @endif
+                    <a href="{{ route('plans.showOne', $plan) }}" class="inline-flex items-center gap-1 text-xs text-gold hover:text-gold/80 underline mt-2 transition">
+                        Ver detalle del plan <span aria-hidden="true">→</span>
+                    </a>
                 </div>
                 @if ($metodologia)
                     <span class="shrink-0 text-xs px-3 py-1 bg-line/5 border border-line/10 rounded-full text-text-secondary">
@@ -648,13 +651,9 @@
             </div>
         @endif
 
-        <form action="{{ route('plan.destroy') }}" method="POST" onsubmit="return confirm('¿Eliminar el plan actual y subir uno nuevo?');" class="text-center">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="text-xs text-text-secondary/60 hover:text-nofiel underline transition">
-                Reemplazar plan
-            </button>
-        </form>
+        <a href="{{ route('onboarding.show', ['nuevo' => 1]) }}" class="block text-center text-xs text-text-secondary/60 hover:text-gold underline transition">
+            Subir nuevo plan
+        </a>
     </aside>
     </div> {{-- close grid lg:grid-cols-3 --}}
 

@@ -19,8 +19,8 @@
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             Hoy
                         </x-nav-link>
-                        <x-nav-link :href="route('plan.show')" :active="request()->routeIs('plan.show')">
-                            Mi plan
+                        <x-nav-link :href="route('plans.history')" :active="request()->routeIs('plans.history') || request()->routeIs('plans.showOne')">
+                            Mis planes
                         </x-nav-link>
                     @endif
                 </div>
@@ -77,8 +77,8 @@
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     Hoy
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('plan.show')" :active="request()->routeIs('plan.show')">
-                    Mi plan
+                <x-responsive-nav-link :href="route('plans.history')" :active="request()->routeIs('plans.history') || request()->routeIs('plans.showOne')">
+                    Mis planes
                 </x-responsive-nav-link>
             @endif
         </div>

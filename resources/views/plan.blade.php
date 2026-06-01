@@ -1,7 +1,33 @@
+@php $historical = $historical ?? false; @endphp
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="font-serif text-2xl">Mi plan</h1>
-        <p class="text-sm text-text-secondary mt-1">Lo que su nutricionista escribió, organizado.</p>
+        @if ($historical)
+            <div class="flex items-center gap-2 mb-1">
+                <a href="{{ route('plans.history') }}" class="text-xs text-text-secondary hover:text-gold transition">← Mis planes</a>
+                @if (! ($plan?->is_active))
+                    <span class="text-[10px] px-2 py-0.5 bg-line/10 border border-line/15 text-text-secondary rounded-full uppercase tracking-wider">Archivado</span>
+                @endif
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h1 class="font-serif text-2xl">Plan del {{ $plan?->created_at?->isoFormat('D [de] MMMM, YYYY') }}</h1>
+                    <p class="text-sm text-text-secondary mt-1">Vista de solo lectura.</p>
+                </div>
+                @if ($plan && ! $plan->is_active)
+                    <form action="{{ route('plans.reactivate', $plan) }}" method="POST"
+                          onsubmit="return confirm('¿Reactivar este plan? Pasará a ser tu plan actual y el activo de ahora quedará archivado.');"
+                          class="shrink-0">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 bg-gold text-black px-4 py-2 rounded-full font-bold text-sm hover:bg-gold/90 transition">
+                            <span aria-hidden="true">↻</span> Reactivar este plan
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @else
+            <h1 class="font-serif text-2xl">Mi plan</h1>
+            <p class="text-sm text-text-secondary mt-1">Lo que su nutricionista escribió, organizado.</p>
+        @endif
     </x-slot>
 
     @php

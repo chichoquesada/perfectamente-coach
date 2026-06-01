@@ -13,13 +13,17 @@ use Illuminate\View\View;
 
 class OnboardingController extends Controller
 {
-    public function show(): View|RedirectResponse
+    public function show(Request $request): View|RedirectResponse
     {
-        if (Auth::user()->activeNutritionalPlan()->exists()) {
+        $hasActivePlan = Auth::user()->activeNutritionalPlan()->exists();
+
+        // Con plan activo, sólo entramos al formulario si el usuario eligió
+        // explícitamente "Subir nuevo plan" (?nuevo=1). Si no, al dashboard.
+        if ($hasActivePlan && ! $request->boolean('nuevo')) {
             return redirect()->route('dashboard');
         }
 
-        return view('onboarding.show');
+        return view('onboarding.show', ['hasActivePlan' => $hasActivePlan]);
     }
 
     public function uploadPdf(Request $request, GeminiExtractorService $gemini): RedirectResponse
@@ -65,6 +69,10 @@ class OnboardingController extends Controller
                 ->withInput()
                 ->withErrors(['pdf' => $msg]);
         }
+
+        // Archivar cualquier plan activo previo: 1 activo a la vez, el resto queda
+        // en el historial. (El global scope de BelongsToUser limita al usuario.)
+        NutritionalPlan::where('is_active', true)->update(['is_active' => false]);
 
         NutritionalPlan::create([
             'pdf_path' => $path,

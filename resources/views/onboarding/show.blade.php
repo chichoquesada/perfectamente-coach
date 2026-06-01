@@ -1,11 +1,25 @@
+@php $hasActivePlan = $hasActivePlan ?? false; @endphp
 <x-app-layout>
     <x-slot name="header">
-        <p class="text-xs text-gold tracking-[0.3em] uppercase mb-2">Paso 1 de 1</p>
-        <h1 class="font-serif text-3xl">Comencemos. <em class="text-gold not-italic font-serif italic">Suba su plan.</em></h1>
+        <p class="text-xs text-gold tracking-[0.3em] uppercase mb-2">{{ $hasActivePlan ? 'Nuevo plan' : 'Paso 1 de 1' }}</p>
+        <h1 class="font-serif text-3xl">
+            @if ($hasActivePlan)
+                Subir un <em class="text-gold not-italic font-serif italic">plan nuevo.</em>
+            @else
+                Comencemos. <em class="text-gold not-italic font-serif italic">Suba su plan.</em>
+            @endif
+        </h1>
         <p class="text-sm text-text-secondary mt-2">
             La IA lo lee, lo organiza y le entrega su tablero diario. PDF de su nutricionista, médico o coach.
         </p>
     </x-slot>
+
+    @if ($hasActivePlan)
+        <div class="mb-6 p-4 bg-gold/5 border border-gold/20 rounded-xl text-sm text-text-secondary flex items-start gap-3">
+            <span class="text-gold shrink-0">ℹ️</span>
+            <span>Al subir este plan, tu plan actual pasa a <strong class="text-text-primary">archivado</strong> y queda en <a href="{{ route('plans.history') }}" class="text-gold underline">Mis planes</a>. No se borra.</span>
+        </div>
+    @endif
 
     <div
         x-data="{

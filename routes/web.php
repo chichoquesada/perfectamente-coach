@@ -275,15 +275,48 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ]);
         })->name('day.show');
 
+        // "Mi plan" se unificó con la vista de detalle (plans.showOne). Redirigimos
+        // para que cualquier link viejo siga funcionando y haya una sola vista.
         Route::get('/plan', function () {
-            return view('plan', ['plan' => auth()->user()->activeNutritionalPlan]);
+            $plan = auth()->user()->activeNutritionalPlan;
+
+            return $plan
+                ? redirect()->route('plans.showOne', $plan)
+                : redirect()->route('onboarding.show');
         })->name('plan.show');
 
+        // "Reemplazar plan": archiva el activo (is_active=false) en vez de borrarlo,
+        // así queda en el historial. Luego el onboarding deja subir el nuevo.
         Route::delete('/plan/active', function () {
-            auth()->user()->activeNutritionalPlan?->delete();
-            return redirect()->route('onboarding.show')->with('status', 'Plan eliminado. Suba uno nuevo.');
+            auth()->user()->activeNutritionalPlan?->update(['is_active' => false]);
+            return redirect()->route('onboarding.show')->with('status', 'Plan archivado. Suba el nuevo; el anterior queda en su historial.');
         })->name('plan.destroy');
     });
+
+    // Historial de planes (fuera de plan.required: se puede consultar aunque no
+    // haya un plan activo, ej. justo después de archivar).
+    Route::get('/mis-planes', function () {
+        $plans = auth()->user()->nutritionalPlans()
+            ->orderByDesc('is_active')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('plans-history', compact('plans'));
+    })->name('plans.history');
+
+    // Ver un plan específico (read-only). El global scope de BelongsToUser
+    // garantiza que sólo se resuelven planes del usuario autenticado.
+    Route::get('/mis-planes/{plan}', function (\App\Models\NutritionalPlan $plan) {
+        return view('plan', ['plan' => $plan, 'historical' => true]);
+    })->name('plans.showOne');
+
+    // Reactivar un plan archivado: pasa a ser el activo y desactiva el anterior.
+    Route::post('/mis-planes/{plan}/reactivar', function (\App\Models\NutritionalPlan $plan) {
+        \App\Models\NutritionalPlan::where('is_active', true)->update(['is_active' => false]);
+        $plan->update(['is_active' => true]);
+
+        return redirect()->route('dashboard')->with('status', 'Plan reactivado. Es tu plan actual.');
+    })->name('plans.reactivate');
 });
 
 // Panel del nutricionista

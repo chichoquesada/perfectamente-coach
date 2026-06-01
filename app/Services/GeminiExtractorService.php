@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class GeminiExtractorService
@@ -21,6 +22,23 @@ class GeminiExtractorService
     }
 
     /**
+     * Modelos a intentar, en orden. El configurado primero; si Google lo
+     * reporta sobrecargado (503/429), caemos al siguiente. Se deduplican
+     * por si el configurado ya está en la lista de fallbacks.
+     *
+     * @return list<string>
+     */
+    private function modelCandidates(): array
+    {
+        return array_values(array_unique([
+            $this->model,
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-flash-latest',
+        ]));
+    }
+
+    /**
      * Lee un PDF (path absoluto) y devuelve el plan extraído como array.
      *
      * @throws RuntimeException si la API falla o el JSON está malformado.
@@ -33,40 +51,7 @@ class GeminiExtractorService
 
         $pdfBase64 = base64_encode((string) file_get_contents($absolutePdfPath));
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'X-goog-api-key' => $this->apiKey,
-        ])
-            ->withOptions(['verify' => $this->caBundle()])
-            ->timeout(120)
-            ->post(
-            "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
-            [
-                'contents' => [[
-                    'parts' => [
-                        ['inline_data' => [
-                            'mime_type' => 'application/pdf',
-                            'data' => $pdfBase64,
-                        ]],
-                        ['text' => $this->prompt()],
-                    ],
-                ]],
-                'generationConfig' => [
-                    'responseMimeType' => 'application/json',
-                    'temperature' => 0.2,
-                    // gemini-flash-latest admite hasta 65536 tokens de salida.
-                    // Con 8192 los planes grandes (muchas opciones de comida) se
-                    // truncaban a mitad de string → JSON inválido.
-                    'maxOutputTokens' => 65536,
-                ],
-            ]
-        );
-
-        if (! $response->successful()) {
-            throw new RuntimeException(
-                "Gemini API error {$response->status()}: " . $response->body()
-            );
-        }
+        $response = $this->callGeminiWithFallback($pdfBase64);
 
         $jsonText = $response->json('candidates.0.content.parts.0.text');
         $finishReason = $response->json('candidates.0.finishReason');
@@ -116,6 +101,85 @@ class GeminiExtractorService
             'Gemini devolvió ' . $diag
             . ' | raw guardado en ' . basename($dumpPath)
             . ' | preview: ' . substr($cleaned, 0, 300)
+        );
+    }
+
+    /**
+     * Llama a Gemini probando cada modelo candidato en orden, con reintentos
+     * y backoff ante sobrecarga del servicio (503 UNAVAILABLE / 429). Devuelve
+     * la primera respuesta exitosa. Errores no transitorios (400, 401, 404…)
+     * cortan de inmediato sin reintentar.
+     *
+     * @return \Illuminate\Http\Client\Response
+     */
+    private function callGeminiWithFallback(string $pdfBase64)
+    {
+        $payload = [
+            'contents' => [[
+                'parts' => [
+                    ['inline_data' => [
+                        'mime_type' => 'application/pdf',
+                        'data' => $pdfBase64,
+                    ]],
+                    ['text' => $this->prompt()],
+                ],
+            ]],
+            'generationConfig' => [
+                'responseMimeType' => 'application/json',
+                'temperature' => 0.2,
+                // gemini-flash-latest admite hasta 65536 tokens de salida.
+                // Con 8192 los planes grandes (muchas opciones de comida) se
+                // truncaban a mitad de string → JSON inválido.
+                'maxOutputTokens' => 65536,
+            ],
+        ];
+
+        $lastStatus = 0;
+        $lastBody = '';
+
+        foreach ($this->modelCandidates() as $model) {
+            // Hasta 3 intentos por modelo ante 503/429, con backoff 2s/4s.
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
+                $response = Http::withHeaders([
+                    'Content-Type' => 'application/json',
+                    'X-goog-api-key' => $this->apiKey,
+                ])
+                    ->withOptions(['verify' => $this->caBundle()])
+                    ->timeout(120)
+                    ->post(
+                        "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent",
+                        $payload
+                    );
+
+                if ($response->successful()) {
+                    return $response;
+                }
+
+                $lastStatus = $response->status();
+                $lastBody = $response->body();
+
+                $transient = in_array($lastStatus, [429, 500, 503], true);
+
+                if (! $transient) {
+                    // Error definitivo (400/401/404…): no insistir.
+                    throw new RuntimeException("Gemini API error {$lastStatus}: {$lastBody}");
+                }
+
+                Log::warning('Gemini sobrecargado, reintentando', [
+                    'model' => $model,
+                    'attempt' => $attempt,
+                    'status' => $lastStatus,
+                ]);
+
+                if ($attempt < 3) {
+                    sleep(2 * $attempt); // 2s, luego 4s
+                }
+            }
+            // Este modelo sigue caído tras 3 intentos: probamos el siguiente.
+        }
+
+        throw new RuntimeException(
+            "Gemini API error {$lastStatus} (todos los modelos sobrecargados): {$lastBody}"
         );
     }
 

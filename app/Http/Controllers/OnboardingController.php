@@ -51,11 +51,19 @@ class OnboardingController extends Controller
             // Borramos el PDF para no dejar huérfano. El usuario reintenta.
             Storage::delete($path);
 
+            // Distinguimos "servicio ocupado" (503/429 de Google) de un PDF
+            // realmente ilegible, para no culpar al PDF cuando no es la causa.
+            $overloaded = str_contains($e->getMessage(), 'sobrecargado')
+                || str_contains($e->getMessage(), '503')
+                || str_contains($e->getMessage(), '429');
+
+            $msg = $overloaded
+                ? 'El servicio de IA está saturado en este momento (alta demanda). No es problema de su PDF — espere un minuto y vuelva a intentarlo.'
+                : 'No pudimos leer su plan. Intente de nuevo o verifique que el PDF tenga texto legible (no escaneado).';
+
             return back()
                 ->withInput()
-                ->withErrors([
-                    'pdf' => 'No pudimos leer su plan. Intente de nuevo o verifique que el PDF tenga texto legible (no escaneado).',
-                ]);
+                ->withErrors(['pdf' => $msg]);
         }
 
         NutritionalPlan::create([

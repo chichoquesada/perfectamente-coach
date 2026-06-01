@@ -12,11 +12,19 @@
 
     @php
         $data = $plan?->extracted_data ?? [];
-        $paciente = $data['paciente']['nombre'] ?? null;
+        // Nombre de la cuenta (confiable) por encima del extraído del PDF, que puede venir truncado.
+        $paciente = auth()->user()->name ?: ($data['paciente']['nombre'] ?? null);
         $objetivo = $data['objetivos']['principal'] ?? null;
         $metodologia = $data['metodologia'] ?? null;
         // $comidas, $mode, $checksToday, $fidelidad, $suplementos, $farmacologia vienen del controller
         $totalSupFarma = count($suplementos) + count($farmacologia);
+
+        // Map itemId => hora actual (para edición reactiva de horas en el cliente).
+        $horasIniciales = [];
+        foreach ($comidas as $idx => $c) {
+            $id = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$idx);
+            $horasIniciales[$id] = $c['hora'] ?? null;
+        }
     @endphp
 
     @if (! $plan)
@@ -34,7 +42,7 @@
     <div class="grid lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
         <div
-            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}')"
+            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}', {{ \Illuminate\Support\Js::from($horasIniciales) }})"
             class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 sm:p-8"
         >
             <div class="flex items-start justify-between gap-4 mb-6">
@@ -93,10 +101,15 @@
             </div>
 
             @if (count($comidas) > 0)
-                <div class="space-y-2">
+                <div class="space-y-3">
                     @foreach ($comidas as $c)
                         @php
                             $itemId = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$loop->index);
+                            $descripcion = $c['descripcion_plan'] ?? null;
+                            $opciones = $c['opciones'] ?? [];
+                            $tip = $c['tip'] ?? null;
+                            $notasComida = $c['notas'] ?? [];
+                            $tieneDetalle = $descripcion || count($opciones) > 0 || $tip || count($notasComida) > 0;
                         @endphp
                         <div
                             class="bg-bg/50 border-l-2 rounded-xl transition"
@@ -111,16 +124,29 @@
                                 <div class="w-10 h-10 flex items-center justify-center bg-line/5 rounded-lg text-xl shrink-0">
                                     {{ $c['icono_sugerido'] ?? '🍽️' }}
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs text-text-secondary uppercase tracking-wider">
-                                        {{ $c['hora'] ?? '—' }}
-                                    </div>
-                                    <div class="font-serif text-base truncate">
-                                        {{ $c['nombre'] ?? 'Comida' }}
+                                <div
+                                    @if ($tieneDetalle) @click="toggleExpand('{{ $itemId }}')" @endif
+                                    class="flex-1 min-w-0 {{ $tieneDetalle ? 'cursor-pointer' : '' }}"
+                                >
+                                    {{-- Hora: editable. Si no tiene, botón para asignarla. --}}
+                                    <button
+                                        type="button"
+                                        @click.stop="openHora('{{ $itemId }}')"
+                                        class="text-xs uppercase tracking-wider transition"
+                                        :class="horas['{{ $itemId }}'] ? 'text-text-secondary hover:text-gold' : 'text-gold/70 hover:text-gold'"
+                                    >
+                                        <span x-show="horas['{{ $itemId }}']" x-text="horas['{{ $itemId }}']"></span>
+                                        <span x-show="!horas['{{ $itemId }}']">+ asignar hora</span>
+                                    </button>
+                                    <div class="font-serif text-base truncate flex items-center gap-1.5">
+                                        <span class="truncate">{{ $c['nombre'] ?? 'Comida' }}</span>
+                                        @if ($tieneDetalle)
+                                            <span class="text-text-secondary/50 text-xs shrink-0" x-text="expanded === '{{ $itemId }}' ? '▲' : '▼'"></span>
+                                        @endif
                                     </div>
                                     <div
                                         x-show="notes['{{ $itemId }}'] && noteOpen !== '{{ $itemId }}'"
-                                        @click="openNote('{{ $itemId }}')"
+                                        @click.stop="openNote('{{ $itemId }}')"
                                         class="text-xs text-text-secondary italic mt-1 cursor-pointer hover:text-text-primary transition truncate"
                                         x-text="notes['{{ $itemId }}']"
                                     ></div>
@@ -137,23 +163,82 @@
                                     <span x-show="notes['{{ $itemId }}']" x-cloak>✎</span>
                                 </button>
 
-                                <button
-                                    type="button"
-                                    @click="cycle('{{ $itemId }}')"
-                                    :disabled="loading['{{ $itemId }}']"
-                                    :class="{
-                                        'bg-fiel border-fiel text-black': checks['{{ $itemId }}'] === 'fiel',
-                                        'bg-parcial border-parcial text-black': checks['{{ $itemId }}'] === 'parcial',
-                                        'bg-nofiel border-nofiel text-white': checks['{{ $itemId }}'] === 'nofiel',
-                                        'border-line/15 text-text-secondary hover:border-line/30': !checks['{{ $itemId }}'],
-                                        'opacity-40': loading['{{ $itemId }}']
-                                    }"
-                                    class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
-                                    title="Click para marcar"
-                                >
-                                    <span x-show="!loading['{{ $itemId }}']" x-text="iconFor(checks['{{ $itemId }}'])"></span>
-                                    <span x-show="loading['{{ $itemId }}']" x-cloak>…</span>
-                                </button>
+                                {{-- Toggle de estado compacto (fool-proof): 3 opciones siempre visibles --}}
+                                <div class="flex items-center gap-1 shrink-0 bg-line/5 rounded-lg p-0.5">
+                                    @foreach ([
+                                        'fiel' => ['✓', 'fiel', 'text-black'],
+                                        'parcial' => ['~', 'parcial', 'text-black'],
+                                        'nofiel' => ['✗', 'nofiel', 'text-white'],
+                                    ] as $st => [$icon, $color, $activeText])
+                                        <button
+                                            type="button"
+                                            @click="setStatus('{{ $itemId }}', '{{ $st }}')"
+                                            :disabled="loading['{{ $itemId }}']"
+                                            :class="checks['{{ $itemId }}'] === '{{ $st }}'
+                                                ? 'bg-{{ $color }} {{ $activeText }}'
+                                                : 'text-text-secondary/50 hover:text-text-primary'"
+                                            class="w-7 h-7 rounded-md flex items-center justify-center text-sm font-bold transition disabled:opacity-40"
+                                            title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel'][$st] }}"
+                                        >{{ $icon }}</button>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- Detalle expandible: qué comer --}}
+                            @if ($tieneDetalle)
+                                <div x-show="expanded === '{{ $itemId }}'" x-cloak x-transition.opacity class="px-3 pb-3 -mt-1">
+                                    <div class="bg-bg/60 border border-line/[0.06] rounded-lg p-3 space-y-3">
+                                        @if ($descripcion)
+                                            <p class="text-sm text-text-secondary">{{ $descripcion }}</p>
+                                        @endif
+                                        @if (count($opciones) > 0)
+                                            <div>
+                                                <p class="text-[10px] text-text-secondary/70 uppercase tracking-wider mb-1.5">Opciones</p>
+                                                <ul class="space-y-1">
+                                                    @foreach ($opciones as $op)
+                                                        <li class="text-sm text-text-primary flex gap-2">
+                                                            <span class="text-gold shrink-0">·</span>
+                                                            <span>{{ $op }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+                                        @if (count($notasComida) > 0)
+                                            <ul class="space-y-1">
+                                                @foreach ($notasComida as $n)
+                                                    <li class="text-xs text-text-secondary flex gap-2">
+                                                        <span class="text-parcial shrink-0">!</span>
+                                                        <span>{{ $n }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                        @if ($tip)
+                                            <div class="bg-gold/5 border-l-2 border-gold/40 rounded-r-lg px-3 py-2">
+                                                <p class="text-xs text-text-secondary italic">💡 {{ $tip }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Editor de hora inline --}}
+                            <div x-show="horaOpen === '{{ $itemId }}'" x-cloak x-transition.opacity class="px-3 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        type="time"
+                                        x-model="horaDraft"
+                                        class="bg-bg border border-line/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-1.5 text-sm transition"
+                                    >
+                                    <button type="button" @click="saveHora('{{ $itemId }}')" :disabled="loading['{{ $itemId }}']"
+                                        class="text-xs bg-gold text-black px-4 py-1.5 rounded-full font-semibold hover:bg-gold/90 disabled:opacity-40 transition">Guardar</button>
+                                    <button type="button" @click="clearHora('{{ $itemId }}')" :disabled="loading['{{ $itemId }}']"
+                                        x-show="horas['{{ $itemId }}']"
+                                        class="text-xs text-text-secondary/60 hover:text-nofiel px-2 py-1.5 transition">Sin hora</button>
+                                    <button type="button" @click="horaOpen = null"
+                                        class="text-xs text-text-secondary/60 hover:text-text-primary px-2 py-1.5 transition">Cancelar</button>
+                                </div>
                             </div>
 
                             {{-- Editor de nota inline --}}
@@ -190,7 +275,7 @@
                                     x-show="!checks['{{ $itemId }}']"
                                     class="text-xs text-text-secondary/60 italic mt-2"
                                 >
-                                    Marque la comida (✓ ~ ✗) antes de guardar la nota.
+                                    Marque la comida (Fiel / Parcial / No fiel) antes de guardar la nota.
                                 </p>
                             </div>
                         </div>
@@ -199,7 +284,7 @@
             @endif
 
             <p class="mt-6 text-xs text-text-secondary/60 italic font-serif text-center">
-                Click en el círculo: vacío → Fiel → Parcial → No fiel → vacío
+                Toque la comida para ver el detalle · marque Fiel, Parcial o No fiel
             </p>
 
             @if ($totalSupFarma > 0)
@@ -546,10 +631,11 @@
     </div> {{-- close grid lg:grid-cols-3 --}}
 
         <script>
-            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode) {
+            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode, initialHoras) {
                 return {
                     checks: initialChecks,
                     notes: initialNotes,
+                    horas: initialHoras || {},
                     fidelidad: fidelidad,
                     totalComidas: totalComidas,
                     mode: mode,
@@ -557,6 +643,54 @@
                     loading: {},
                     noteOpen: null,
                     noteDraft: '',
+                    expanded: null,
+                    horaOpen: null,
+                    horaDraft: '',
+                    toggleExpand(itemId) {
+                        this.expanded = this.expanded === itemId ? null : itemId;
+                    },
+                    openHora(itemId) {
+                        this.horaOpen = this.horaOpen === itemId ? null : itemId;
+                        this.horaDraft = this.horas[itemId] || '';
+                    },
+                    async saveHora(itemId) {
+                        await this.sendHora(itemId, this.horaDraft || null);
+                    },
+                    async clearHora(itemId) {
+                        await this.sendHora(itemId, null);
+                    },
+                    async sendHora(itemId, hora) {
+                        this.loading[itemId] = true;
+                        try {
+                            const res = await fetch('{{ route('mealtime.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                },
+                                body: JSON.stringify({ item_id: itemId, hora: hora }),
+                            });
+                            const json = await res.json();
+                            if (!res.ok) throw new Error(json.error || 'HTTP ' + res.status);
+                            if (json.hora) {
+                                this.horas[itemId] = json.hora;
+                            } else {
+                                delete this.horas[itemId];
+                            }
+                            this.horaOpen = null;
+                        } catch (e) {
+                            console.error('save hora failed', e);
+                            alert(e.message || 'No se pudo guardar la hora.');
+                        } finally {
+                            this.loading[itemId] = false;
+                        }
+                    },
+                    setStatus(itemId, status) {
+                        // Toggle: si ya está en ese estado, lo desmarca.
+                        const next = this.checks[itemId] === status ? null : status;
+                        this.send(itemId, next);
+                    },
                     openNote(itemId) {
                         this.noteOpen = itemId;
                         this.noteDraft = this.notes[itemId] || '';

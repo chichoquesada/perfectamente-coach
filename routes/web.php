@@ -170,6 +170,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
         Route::post('/api/mode', [ModeController::class, 'store'])->name('mode.store');
+
+        // Asignar / editar la hora de una comida en el plan activo del paciente.
+        // El usuario puede ponerle hora a una comida que vino sin ella (o vaciarla).
+        Route::post('/api/meal-time', function (\Illuminate\Http\Request $request) {
+            $validated = $request->validate([
+                'item_id' => ['required', 'string'],
+                'hora' => ['nullable', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
+            ], [
+                'hora.regex' => 'Use el formato HH:MM (24h).',
+            ]);
+
+            $plan = auth()->user()->activeNutritionalPlan;
+            if (! $plan) {
+                return response()->json(['error' => 'Sin plan activo'], 422);
+            }
+
+            $hora = $validated['hora'] ?: null;
+            $extracted = $plan->extracted_data ?? [];
+            $found = false;
+
+            // Buscamos la comida por su id (o slug del nombre) en los 3 grupos.
+            foreach (['comidas', 'comidas_entreno', 'comidas_competencia'] as $grupo) {
+                foreach ($extracted[$grupo] ?? [] as $idx => $c) {
+                    $id = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$idx);
+                    if ($id === $validated['item_id']) {
+                        $extracted[$grupo][$idx]['hora'] = $hora;
+                        $found = true;
+                    }
+                }
+            }
+
+            if (! $found) {
+                return response()->json(['error' => 'Comida no encontrada'], 404);
+            }
+
+            $plan->extracted_data = $extracted;
+            $plan->save();
+
+            return response()->json(['hora' => $hora]);
+        })->name('mealtime.store');
         Route::get('/api/insight/weekly', [InsightController::class, 'weekly'])->name('insight.weekly');
 
         Route::get('/api/day/{date}', function (string $date) {

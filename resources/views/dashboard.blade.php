@@ -42,7 +42,7 @@
     <div class="grid lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
         <div
-            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}', {{ \Illuminate\Support\Js::from($horasIniciales) }})"
+            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}', {{ \Illuminate\Support\Js::from($horasIniciales) }}, {{ $supplementsAffect ? 'true' : 'false' }})"
             class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 sm:p-8"
         >
             <div class="flex items-start justify-between gap-4 mb-6">
@@ -290,11 +290,34 @@
             @if ($totalSupFarma > 0)
                 <div class="mt-8 pt-6 border-t border-line/[0.06]">
                     @foreach ([
-                        ['items' => $suplementos, 'label' => '🥤 Suplementos'],
-                        ['items' => $farmacologia, 'label' => '💊 Farmacología'],
+                        ['items' => $suplementos, 'label' => '🥤 Suplementos', 'kind' => 'sup'],
+                        ['items' => $farmacologia, 'label' => '💊 Farmacología', 'kind' => 'farm'],
                     ] as $section)
                         @if (count($section['items']) > 0)
-                            <p class="text-xs text-gold tracking-[0.25em] uppercase mb-3">{{ $section['label'] }}</p>
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <p class="text-xs text-gold tracking-[0.25em] uppercase">{{ $section['label'] }}</p>
+                                {{-- Toggle: ¿los suplementos cuentan en la fidelidad? --}}
+                                @if ($section['kind'] === 'sup')
+                                    <button
+                                        type="button"
+                                        @click="toggleSupplementsFidelity()"
+                                        :disabled="prefLoading"
+                                        class="flex items-center gap-2 text-[11px] text-text-secondary hover:text-text-primary transition disabled:opacity-40"
+                                        title="Si está activo, marcar suplementos suma a tu % de fidelidad"
+                                    >
+                                        <span>Cuentan en mi fidelidad</span>
+                                        <span
+                                            class="relative w-9 h-5 rounded-full transition shrink-0"
+                                            :class="supplementsAffect ? 'bg-gold' : 'bg-line/20'"
+                                        >
+                                            <span
+                                                class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"
+                                                :class="supplementsAffect ? 'translate-x-4' : ''"
+                                            ></span>
+                                        </span>
+                                    </button>
+                                @endif
+                            </div>
                             <div class="space-y-2 mb-5">
                                 @foreach ($section['items'] as $s)
                                     @php
@@ -320,23 +343,25 @@
                                                     <div class="text-xs text-text-secondary/60 italic truncate">{{ $s['nota'] }}</div>
                                                 @endif
                                             </div>
-                                            <button
-                                                type="button"
-                                                @click="cycle('{{ $sid }}')"
-                                                :disabled="loading['{{ $sid }}']"
-                                                :class="{
-                                                    'bg-fiel border-fiel text-black': checks['{{ $sid }}'] === 'fiel',
-                                                    'bg-parcial border-parcial text-black': checks['{{ $sid }}'] === 'parcial',
-                                                    'bg-nofiel border-nofiel text-white': checks['{{ $sid }}'] === 'nofiel',
-                                                    'border-line/15 text-text-secondary hover:border-line/30': !checks['{{ $sid }}'],
-                                                    'opacity-40': loading['{{ $sid }}']
-                                                }"
-                                                class="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold transition shrink-0"
-                                                title="Click para marcar"
-                                            >
-                                                <span x-show="!loading['{{ $sid }}']" x-text="iconFor(checks['{{ $sid }}'])"></span>
-                                                <span x-show="loading['{{ $sid }}']" x-cloak>…</span>
-                                            </button>
+                                            {{-- Toggle compacto de estado (igual que las comidas) --}}
+                                            <div class="flex items-center gap-1 shrink-0 bg-line/5 rounded-lg p-0.5">
+                                                @foreach ([
+                                                    'fiel' => ['✓', 'fiel', 'text-black'],
+                                                    'parcial' => ['~', 'parcial', 'text-black'],
+                                                    'nofiel' => ['✗', 'nofiel', 'text-white'],
+                                                ] as $st => [$icon, $color, $activeText])
+                                                    <button
+                                                        type="button"
+                                                        @click="setStatus('{{ $sid }}', '{{ $st }}')"
+                                                        :disabled="loading['{{ $sid }}']"
+                                                        :class="checks['{{ $sid }}'] === '{{ $st }}'
+                                                            ? 'bg-{{ $color }} {{ $activeText }}'
+                                                            : 'text-text-secondary/50 hover:text-text-primary'"
+                                                        class="w-7 h-7 rounded-md flex items-center justify-center text-sm font-bold transition disabled:opacity-40"
+                                                        title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel'][$st] }}"
+                                                    >{{ $icon }}</button>
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
@@ -344,7 +369,7 @@
                         @endif
                     @endforeach
                     <p class="text-xs text-text-secondary/60 italic font-serif text-center">
-                        Marcar suplementos o fármacos no afecta su % de fidelidad de comidas.
+                        La farmacología nunca cuenta en tu % de fidelidad (es responsabilidad médica).
                     </p>
                 </div>
             @endif
@@ -631,7 +656,7 @@
     </div> {{-- close grid lg:grid-cols-3 --}}
 
         <script>
-            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode, initialHoras) {
+            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode, initialHoras, supplementsAffect) {
                 return {
                     checks: initialChecks,
                     notes: initialNotes,
@@ -646,6 +671,31 @@
                     expanded: null,
                     horaOpen: null,
                     horaDraft: '',
+                    supplementsAffect: supplementsAffect,
+                    prefLoading: false,
+                    async toggleSupplementsFidelity() {
+                        if (this.prefLoading) return;
+                        this.prefLoading = true;
+                        const next = !this.supplementsAffect;
+                        try {
+                            const res = await fetch('{{ route('prefs.supplementsFidelity') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                },
+                                body: JSON.stringify({ enabled: next }),
+                            });
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            // Reload para recalcular fidelidad de hoy y el heatmap histórico.
+                            window.location.reload();
+                        } catch (e) {
+                            console.error('pref toggle failed', e);
+                            alert('No se pudo cambiar la preferencia. Reintente.');
+                            this.prefLoading = false;
+                        }
+                    },
                     toggleExpand(itemId) {
                         this.expanded = this.expanded === itemId ? null : itemId;
                     },

@@ -9,6 +9,7 @@ use App\Http\Controllers\Nutri\PatientController;
 use App\Http\Controllers\Nutri\PlanController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
+use App\Support\PlanData;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -60,29 +61,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ])->values()->all();
             }
 
-            // Los checks de sup-/farm- NO cuentan para la fidelidad de comidas.
-            $isMealCheck = fn ($id) => ! str_starts_with($id, 'sup-') && ! str_starts_with($id, 'farm-');
+            // Preferencia del usuario: ¿los suplementos cuentan en la fidelidad?
+            $supplementsAffect = (bool) auth()->user()->supplements_affect_fidelity;
+
+            $checkRecordsToday = $plan
+                ? \App\Models\DailyCheck::where('date', $today)->get()
+                : collect();
 
             $checksToday = [];
             $notesToday = [];
-            if ($plan) {
-                foreach (\App\Models\DailyCheck::where('date', $today)->get() as $c) {
-                    $checksToday[$c->item_id] = $c->status;
-                    if ($c->note) {
-                        $notesToday[$c->item_id] = $c->note;
-                    }
+            foreach ($checkRecordsToday as $c) {
+                $checksToday[$c->item_id] = $c->status;
+                if ($c->note) {
+                    $notesToday[$c->item_id] = $c->note;
                 }
             }
 
-            $totalComidas = count($comidas);
-            $score = collect($checksToday)
-                ->filter(fn ($s, $id) => $isMealCheck($id))
-                ->sum(fn ($s) => match ($s) {
-                    'fiel' => 1,
-                    'parcial' => 0.5,
-                    default => 0,
-                });
-            $fidelidad = $totalComidas > 0 ? (int) round(($score / $totalComidas) * 100) : 0;
+            $fidelidad = PlanData::fidelity($extracted, $mode, $checkRecordsToday, $supplementsAffect);
 
             // Heatmap rango variable (7 / 30 / 90 días). Default 30.
             $range = (int) request()->query('range', 30);
@@ -104,19 +99,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     $d = now()->subDays($i);
                     $key = $d->toDateString();
                     $dayMode = $modesByDate[$key] ?? 'descanso';
-                    $dayExtra = match ($dayMode) {
-                        'entreno' => $extracted['comidas_entreno'] ?? [],
-                        'competencia' => $extracted['comidas_competencia'] ?? [],
-                        default => [],
-                    };
-                    $totalDia = count($comidasBase) + count($dayExtra);
-                    $checksDia = $checksByDate->get($key, collect())
-                        ->filter(fn ($c) => $isMealCheck($c->item_id));
-                    $scoreDia = $checksDia->sum(fn ($c) => match ($c->status) {
-                        'fiel' => 1, 'parcial' => 0.5, default => 0,
+                    $dayChecks = $checksByDate->get($key, collect());
+                    // Día con data = tiene al menos un check que cuenta (comida, o
+                    // suplemento si la preferencia está activa). Farma nunca cuenta.
+                    $hasData = $dayChecks->contains(function ($c) use ($supplementsAffect) {
+                        if (str_starts_with($c->item_id, 'farm-')) return false;
+                        if (str_starts_with($c->item_id, 'sup-')) return $supplementsAffect;
+                        return true;
                     });
-                    $f = ($totalDia > 0 && $checksDia->count() > 0)
-                        ? (int) round(($scoreDia / $totalDia) * 100)
+                    $f = $hasData
+                        ? PlanData::fidelity($extracted, $dayMode, $dayChecks, $supplementsAffect)
                         : null;
 
                     $heatmap[] = [
@@ -165,11 +157,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $heatmapStats['dias_con_data'] = $diasConData;
             }
 
-            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap', 'range', 'heatmapStats', 'suplementos', 'farmacologia'));
+            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap', 'range', 'heatmapStats', 'suplementos', 'farmacologia', 'supplementsAffect'));
         })->name('dashboard');
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
         Route::post('/api/mode', [ModeController::class, 'store'])->name('mode.store');
+
+        // Preferencia: ¿los suplementos cuentan en el % de fidelidad?
+        Route::post('/api/prefs/supplements-fidelity', function (\Illuminate\Http\Request $request) {
+            $validated = $request->validate(['enabled' => ['required', 'boolean']]);
+            $user = auth()->user();
+            $user->supplements_affect_fidelity = $validated['enabled'];
+            $user->save();
+
+            return response()->json(['enabled' => $user->supplements_affect_fidelity]);
+        })->name('prefs.supplementsFidelity');
 
         // Asignar / editar la hora de una comida en el plan activo del paciente.
         // El usuario puede ponerle hora a una comida que vino sin ella (o vaciarla).
@@ -257,14 +259,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ];
             }
 
-            $score = $checksByItem
-                ->filter(fn ($c, $id) => ! str_starts_with($id, 'sup-') && ! str_starts_with($id, 'farm-'))
-                ->sum(fn ($c) => match ($c->status) {
-                    'fiel' => 1, 'parcial' => 0.5, default => 0,
-                });
-            $fidelidad = count($comidas) > 0
-                ? (int) round(($score / count($comidas)) * 100)
-                : 0;
+            $fidelidad = PlanData::fidelity(
+                $extracted,
+                $mode,
+                $checksByItem->values(),
+                (bool) auth()->user()->supplements_affect_fidelity,
+            );
 
             return response()->json([
                 'date' => $key,

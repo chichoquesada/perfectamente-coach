@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\DailyCheck;
+use App\Models\DailyMode;
 use App\Models\NutritionalPlan;
+use App\Support\PlanData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,22 +92,14 @@ class CheckController extends Controller
 
     private function fidelidadHoy(NutritionalPlan $plan, string $date): int
     {
-        $totalComidas = count($plan->extracted_data['comidas'] ?? []);
+        $mode = DailyMode::where('date', $date)->value('mode') ?? 'descanso';
+        $checks = DailyCheck::where('date', $date)->get();
 
-        if ($totalComidas === 0) {
-            return 0;
-        }
-
-        // Excluir checks de suplementos/farmacología (prefijo sup-/farm-): no
-        // cuentan para la fidelidad de comidas.
-        $score = DailyCheck::where('date', $date)->get()
-            ->filter(fn ($c) => ! str_starts_with($c->item_id, 'sup-') && ! str_starts_with($c->item_id, 'farm-'))
-            ->sum(fn ($c) => match ($c->status) {
-                'fiel' => 1,
-                'parcial' => 0.5,
-                default => 0,
-            });
-
-        return (int) round(($score / $totalComidas) * 100);
+        return PlanData::fidelity(
+            $plan->extracted_data ?? [],
+            $mode,
+            $checks,
+            (bool) Auth::user()->supplements_affect_fidelity,
+        );
     }
 }

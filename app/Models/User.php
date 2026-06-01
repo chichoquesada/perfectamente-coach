@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'role',
         'gamification_enabled',
+        'supplements_affect_fidelity',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'gamification_enabled' => 'boolean',
+            'supplements_affect_fidelity' => 'boolean',
         ];
     }
 

@@ -88,34 +88,41 @@ class PlanData
      * Las comidas siempre cuentan. Los suplementos cuentan sólo si
      * $supplementsCount (preferencia del usuario). La farmacología nunca cuenta.
      *
+     * Los ítems marcados 'na' (no aplica ese día) se excluyen del total: no
+     * suman ni restan. Si todo lo aplicable quedó en 'na', no hay nada que medir
+     * y se devuelve 0.
+     *
      * @param  Collection|iterable  $checks  Checks del día (cada uno con ->item_id y ->status)
      */
     public static function fidelity(array $extracted, string $mode, $checks, bool $supplementsCount): int
     {
         $checks = $checks instanceof Collection ? $checks : collect($checks);
 
-        $mealIds = collect(self::meals($extracted, $mode))->pluck('item_id');
-        $total = $mealIds->count();
-
-        $countableIds = $mealIds;
+        $countableIds = collect(self::meals($extracted, $mode))->pluck('item_id');
         if ($supplementsCount) {
-            $supIds = collect(self::supplements($extracted))->pluck('item_id');
-            $total += $supIds->count();
-            $countableIds = $countableIds->merge($supIds);
+            $countableIds = $countableIds->merge(collect(self::supplements($extracted))->pluck('item_id'));
         }
 
-        if ($total === 0) {
+        if ($countableIds->isEmpty()) {
             return 0;
         }
 
         $idSet = $countableIds->flip();
-        $score = $checks
-            ->filter(fn ($c) => $idSet->has($c->item_id))
-            ->sum(fn ($c) => match ($c->status) {
-                'fiel' => 1,
-                'parcial' => 0.5,
-                default => 0,
-            });
+        $relevant = $checks->filter(fn ($c) => $idSet->has($c->item_id));
+
+        // 'na' sale del denominador: no aplicaba ese día.
+        $naCount = $relevant->where('status', 'na')->count();
+        $total = $countableIds->count() - $naCount;
+
+        if ($total <= 0) {
+            return 0;
+        }
+
+        $score = $relevant->sum(fn ($c) => match ($c->status) {
+            'fiel' => 1,
+            'parcial' => 0.5,
+            default => 0, // nofiel, na o cualquier otro
+        });
 
         return (int) round(($score / $total) * 100);
     }

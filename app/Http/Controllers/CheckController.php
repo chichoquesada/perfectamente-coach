@@ -16,7 +16,7 @@ class CheckController extends Controller
     {
         $data = $request->validate([
             'item_id' => ['required', 'string', 'max:80'],
-            'status'  => ['nullable', 'in:fiel,parcial,nofiel'],
+            'status'  => ['nullable', 'in:fiel,parcial,nofiel,na'],
             'note'    => ['nullable', 'string', 'max:500'],
             'only_note' => ['nullable', 'boolean'],
         ]);

@@ -163,22 +163,23 @@
                                     <span x-show="notes['{{ $itemId }}']" x-cloak>✎</span>
                                 </button>
 
-                                {{-- Toggle de estado compacto (fool-proof): 3 opciones siempre visibles --}}
+                                {{-- Toggle de estado compacto (fool-proof): 4 opciones siempre visibles --}}
                                 <div class="flex items-center gap-1 shrink-0 bg-line/5 rounded-lg p-0.5">
                                     @foreach ([
-                                        'fiel' => ['✓', 'fiel', 'text-black'],
-                                        'parcial' => ['~', 'parcial', 'text-black'],
-                                        'nofiel' => ['✗', 'nofiel', 'text-white'],
-                                    ] as $st => [$icon, $color, $activeText])
+                                        'fiel' => ['✓', 'bg-fiel text-black'],
+                                        'parcial' => ['~', 'bg-parcial text-black'],
+                                        'nofiel' => ['✗', 'bg-nofiel text-white'],
+                                        'na' => ['NA', 'bg-line/40 text-text-primary'],
+                                    ] as $st => [$icon, $activeClass])
                                         <button
                                             type="button"
                                             @click="setStatus('{{ $itemId }}', '{{ $st }}')"
                                             :disabled="loading['{{ $itemId }}']"
                                             :class="checks['{{ $itemId }}'] === '{{ $st }}'
-                                                ? 'bg-{{ $color }} {{ $activeText }}'
+                                                ? '{{ $activeClass }}'
                                                 : 'text-text-secondary/50 hover:text-text-primary'"
-                                            class="w-7 h-7 rounded-md flex items-center justify-center text-sm font-bold transition disabled:opacity-40"
-                                            title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel'][$st] }}"
+                                            class="w-7 h-7 rounded-md flex items-center justify-center {{ $st === 'na' ? 'text-[11px]' : 'text-sm' }} font-bold transition disabled:opacity-40"
+                                            title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel', 'na' => 'No aplica hoy'][$st] }}"
                                         >{{ $icon }}</button>
                                     @endforeach
                                 </div>
@@ -346,19 +347,20 @@
                                             {{-- Toggle compacto de estado (igual que las comidas) --}}
                                             <div class="flex items-center gap-1 shrink-0 bg-line/5 rounded-lg p-0.5">
                                                 @foreach ([
-                                                    'fiel' => ['✓', 'fiel', 'text-black'],
-                                                    'parcial' => ['~', 'parcial', 'text-black'],
-                                                    'nofiel' => ['✗', 'nofiel', 'text-white'],
-                                                ] as $st => [$icon, $color, $activeText])
+                                                    'fiel' => ['✓', 'bg-fiel text-black'],
+                                                    'parcial' => ['~', 'bg-parcial text-black'],
+                                                    'nofiel' => ['✗', 'bg-nofiel text-white'],
+                                                    'na' => ['NA', 'bg-line/40 text-text-primary'],
+                                                ] as $st => [$icon, $activeClass])
                                                     <button
                                                         type="button"
                                                         @click="setStatus('{{ $sid }}', '{{ $st }}')"
                                                         :disabled="loading['{{ $sid }}']"
                                                         :class="checks['{{ $sid }}'] === '{{ $st }}'
-                                                            ? 'bg-{{ $color }} {{ $activeText }}'
+                                                            ? '{{ $activeClass }}'
                                                             : 'text-text-secondary/50 hover:text-text-primary'"
-                                                        class="w-7 h-7 rounded-md flex items-center justify-center text-sm font-bold transition disabled:opacity-40"
-                                                        title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel'][$st] }}"
+                                                        class="w-7 h-7 rounded-md flex items-center justify-center {{ $st === 'na' ? 'text-[11px]' : 'text-sm' }} font-bold transition disabled:opacity-40"
+                                                        title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel', 'na' => 'No aplica hoy'][$st] }}"
                                                     >{{ $icon }}</button>
                                                 @endforeach
                                             </div>
@@ -612,10 +614,10 @@
                                                 'border-fiel': item.status === 'fiel',
                                                 'border-parcial': item.status === 'parcial',
                                                 'border-nofiel': item.status === 'nofiel',
-                                                'border-line/[0.04]': !item.status,
+                                                'border-line/[0.04]': !item.status || item.status === 'na',
                                             }"
                                         >
-                                            <div class="flex items-center gap-3">
+                                            <div class="flex items-center gap-3" :class="item.status === 'na' ? 'opacity-50' : ''">
                                                 <div class="w-9 h-9 flex items-center justify-center bg-line/5 rounded-lg text-base shrink-0" x-text="item.icono"></div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="text-[10px] text-text-secondary uppercase tracking-wider" x-text="item.hora || '—'"></div>
@@ -627,9 +629,10 @@
                                                         'bg-fiel text-black': item.status === 'fiel',
                                                         'bg-parcial text-black': item.status === 'parcial',
                                                         'bg-nofiel text-white': item.status === 'nofiel',
+                                                        'bg-line/40 text-text-primary': item.status === 'na',
                                                         'border border-line/15 text-text-secondary/50': !item.status,
                                                     }"
-                                                    x-text="{ fiel: '✓', parcial: '~', nofiel: '✗' }[item.status] || ''"
+                                                    x-text="{ fiel: '✓', parcial: '~', nofiel: '✗', na: 'NA' }[item.status] || ''"
                                                 ></div>
                                             </div>
                                             <template x-if="item.note">

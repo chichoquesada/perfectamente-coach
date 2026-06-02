@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'gamification_enabled',
         'supplements_affect_fidelity',
+        'streak_threshold',
     ];
 
     /**
@@ -51,6 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'gamification_enabled' => 'boolean',
             'supplements_affect_fidelity' => 'boolean',
+            'streak_threshold' => 'integer',
         ];
     }
 
@@ -72,6 +74,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function dailyChecks()
     {
         return $this->hasMany(DailyCheck::class);
+    }
+
+    public function userAchievements()
+    {
+        return $this->hasMany(UserAchievement::class);
     }
 
     public function dailyModes()

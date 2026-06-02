@@ -125,12 +125,18 @@
         // HUD del día: progreso compartido entre el header (anillo) y el
         // dashboard. El componente dashboard() lo sincroniza con sync().
         Alpine.store('hud', {
-            marked: 0, total: 0, racha: 0, microcopy: '', unit: 'comidas', ready: false, celebrate: false,
-            get pct() { return this.total ? Math.round((this.marked / this.total) * 100) : 0; },
+            marked: 0, total: 0, racha: 0, microcopy: '', unit: 'comidas', fidelidad: 0, ready: false, celebrate: false,
+            // El anillo muestra la FIDELIDAD del día: la MISMA métrica que el popup
+            // del calendario, el heatmap, la racha y el análisis. El "X/Y ítems" de
+            // abajo es el avance del registro (cuántos marcaste). Antes el anillo
+            // mostraba avance y no cuadraba con el resto.
+            get pct() { return this.fidelidad; },
             sync(d) {
                 this.marked = d.marked; this.total = d.total;
                 this.racha = d.racha; this.microcopy = d.microcopy;
-                this.unit = d.unit || 'comidas'; this.ready = true;
+                this.unit = d.unit || 'comidas';
+                this.fidelidad = d.fidelidad ?? 0;
+                this.ready = true;
             },
             fireCelebrate() {
                 this.celebrate = true;

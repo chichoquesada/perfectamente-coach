@@ -87,6 +87,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $heatmap = [];
             $heatmapStats = ['promedio' => 0, 'dias_perfectos' => 0, 'racha_actual' => 0, 'racha_max' => 0, 'dias_con_data' => 0];
+            // Gamificación (racha con día de gracia + medallas). Default sin plan.
+            $gam = [
+                'threshold' => \App\Support\Gamification::threshold(auth()->user()),
+                'unlocked' => [],
+                'newly' => [],
+            ];
 
             if ($plan) {
                 $startDate = now()->subDays($range - 1)->toDateString();
@@ -121,16 +127,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ];
                 }
 
-                // Stats: promedio, días 100%, rachas (>=67% cuenta como día cumplido)
-                $rachaActual = 0;
-                $rachaMax = 0;
-                $rachaTmp = 0;
+                // Stats del rango visible: promedio, días perfectos, días con data.
                 $sum = 0;
                 $diasConData = 0;
                 foreach ($heatmap as $cell) {
                     $f = $cell['fidelidad'];
                     if ($f === null) {
-                        $rachaTmp = 0;
                         continue;
                     }
                     $diasConData++;
@@ -138,26 +140,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     if ($f === 100) {
                         $heatmapStats['dias_perfectos']++;
                     }
-                    if ($f >= 67) {
-                        $rachaTmp++;
-                        $rachaMax = max($rachaMax, $rachaTmp);
-                    } else {
-                        $rachaTmp = 0;
-                    }
-                }
-                // Racha actual: cuenta hacia atrás desde hoy
-                for ($i = count($heatmap) - 1; $i >= 0; $i--) {
-                    $f = $heatmap[$i]['fidelidad'];
-                    if ($f === null || $f < 67) break;
-                    $rachaActual++;
                 }
                 $heatmapStats['promedio'] = $diasConData > 0 ? (int) round($sum / $diasConData) : 0;
-                $heatmapStats['racha_actual'] = $rachaActual;
-                $heatmapStats['racha_max'] = $rachaMax;
                 $heatmapStats['dias_con_data'] = $diasConData;
+
+                // Racha (con día de gracia + umbral del usuario) y detección de
+                // medallas: sobre una ventana fija, NO sobre el rango visible, para
+                // que sean estables aunque se cambie la vista 7/30/90.
+                $gam = \App\Support\Gamification::evaluate(auth()->user(), $extracted, $supplementsAffect);
+                $heatmapStats['racha_actual'] = $gam['racha_actual'];
+                $heatmapStats['racha_max'] = $gam['racha_max'];
             }
 
-            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap', 'range', 'heatmapStats', 'suplementos', 'farmacologia', 'supplementsAffect'));
+            return view('dashboard', compact('plan', 'comidas', 'checksToday', 'notesToday', 'fidelidad', 'mode', 'heatmap', 'range', 'heatmapStats', 'suplementos', 'farmacologia', 'supplementsAffect', 'gam'));
         })->name('dashboard');
 
         Route::post('/api/checks', [CheckController::class, 'store'])->name('checks.store');
@@ -172,6 +167,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             return response()->json(['enabled' => $user->supplements_affect_fidelity]);
         })->name('prefs.supplementsFidelity');
+
+        // Preferencia: % de fidelidad mínimo para que un día cuente en la racha.
+        Route::post('/api/prefs/streak-threshold', function (\Illuminate\Http\Request $request) {
+            $validated = $request->validate([
+                'threshold' => ['required', 'integer', 'min:40', 'max:100'],
+            ]);
+            $user = auth()->user();
+            $user->streak_threshold = $validated['threshold'];
+            $user->save();
+
+            return response()->json(['threshold' => $user->streak_threshold]);
+        })->name('prefs.streakThreshold');
 
         // Asignar / editar la hora de una comida en el plan activo del paciente.
         // El usuario puede ponerle hora a una comida que vino sin ella (o vaciarla).
@@ -234,36 +241,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $mode = $modeRow?->mode ?? 'descanso';
 
             $extracted = $plan->extracted_data ?? [];
-            $comidasBase = $extracted['comidas'] ?? [];
-            $comidasExtra = match ($mode) {
-                'entreno' => $extracted['comidas_entreno'] ?? [],
-                'competencia' => $extracted['comidas_competencia'] ?? [],
-                default => [],
-            };
-            $comidas = array_merge($comidasBase, $comidasExtra);
+            $supplementsAffect = (bool) auth()->user()->supplements_affect_fidelity;
 
             $checksByItem = \App\Models\DailyCheck::where('date', $key)->get()
                 ->keyBy('item_id');
 
+            // Los ítems del popup deben ser EXACTAMENTE los que cuentan en la
+            // fidelidad del día: comidas siempre; suplementos sólo si el toggle del
+            // usuario está ON. Así el % del popup cuadra con los ítems visibles y
+            // con el conteo de "ítems" del HUD de arriba. (Antes mostraba sólo
+            // comidas pero el % incluía suplementos → no cuadraba.)
             $items = [];
-            foreach ($comidas as $idx => $c) {
-                $itemId = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$idx);
-                $check = $checksByItem->get($itemId);
+            foreach (PlanData::meals($extracted, $mode) as $c) {
+                $check = $checksByItem->get($c['item_id']);
                 $items[] = [
-                    'item_id' => $itemId,
+                    'item_id' => $c['item_id'],
                     'nombre' => $c['nombre'] ?? 'Comida',
                     'icono' => $c['icono_sugerido'] ?? '🍽️',
                     'hora' => $c['hora'] ?? null,
                     'status' => $check?->status,
                     'note' => $check?->note,
+                    'tipo' => 'comida',
                 ];
+            }
+            if ($supplementsAffect) {
+                foreach (PlanData::supplements($extracted) as $s) {
+                    $check = $checksByItem->get($s['item_id']);
+                    $items[] = [
+                        'item_id' => $s['item_id'],
+                        'nombre' => $s['nombre'] ?? 'Suplemento',
+                        'icono' => '🥤',
+                        'hora' => null,
+                        'status' => $check?->status,
+                        'note' => $check?->note,
+                        'tipo' => 'suplemento',
+                    ];
+                }
             }
 
             $fidelidad = PlanData::fidelity(
                 $extracted,
                 $mode,
                 $checksByItem->values(),
-                (bool) auth()->user()->supplements_affect_fidelity,
+                $supplementsAffect,
             );
 
             return response()->json([

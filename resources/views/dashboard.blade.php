@@ -708,7 +708,12 @@
                                                 <div class="w-9 h-9 flex items-center justify-center bg-line/5 rounded-lg text-base shrink-0" x-text="item.icono"></div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="text-[10px] text-text-secondary uppercase tracking-wider" x-text="item.hora || '—'"></div>
-                                                    <div class="font-serif text-sm truncate" x-text="item.nombre"></div>
+                                                    <div class="font-serif text-sm truncate flex items-center gap-1.5">
+                                                        <span class="truncate" x-text="item.nombre"></span>
+                                                        <template x-if="item.tipo === 'suplemento'">
+                                                            <span class="shrink-0 text-[9px] text-gold/80 uppercase tracking-wider border border-gold/30 rounded px-1 py-px">sup</span>
+                                                        </template>
+                                                    </div>
                                                 </div>
                                                 <div
                                                     class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -734,6 +739,88 @@
                 </div>
             </div>
         @endif
+
+        {{-- Logros / medallas (gamificación Tanda B) --}}
+        @php
+            $medals = \App\Support\Gamification::medals();
+            $unlocked = $gam['unlocked'] ?? [];
+            $newlyKeys = $gam['newly'] ?? [];
+            $threshold = $gam['threshold'] ?? 60;
+            $earnedCount = count($unlocked);
+            // Meta de los logros recién desbloqueados (para el banner de celebración).
+            $newlyMeta = [];
+            foreach ($newlyKeys as $k) {
+                if (isset($medals[$k])) {
+                    $newlyMeta[] = ['emoji' => $medals[$k][0], 'title' => $medals[$k][1]];
+                }
+            }
+        @endphp
+        <div
+            x-data="achievements({{ \Illuminate\Support\Js::from($newlyMeta) }}, {{ (int) $threshold }})"
+            class="bg-bg-card border border-line/[0.06] rounded-2xl p-6"
+        >
+            <div class="flex items-baseline justify-between mb-4">
+                <p class="text-xs text-gold tracking-[0.25em] uppercase">Logros</p>
+                <span class="text-xs text-text-secondary">{{ $earnedCount }}/{{ count($medals) }}</span>
+            </div>
+
+            {{-- Banner sutil al desbloquear una medalla --}}
+            <template x-if="celebrating && newly.length">
+                <div x-cloak x-transition.opacity
+                     class="mb-4 flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-xl px-4 py-3">
+                    <span class="text-2xl animate-bounce" x-text="newly[0].emoji"></span>
+                    <div class="leading-tight">
+                        <p class="text-xs text-gold tracking-wider uppercase">¡Nuevo logro!</p>
+                        <p class="text-sm font-semibold" x-text="newly.map(n => n.title).join(' · ')"></p>
+                    </div>
+                </div>
+            </template>
+
+            <div class="grid grid-cols-2 gap-3">
+                @foreach ($medals as $key => [$emoji, $title, $how])
+                    @php
+                        $isEarned = isset($unlocked[$key]);
+                        $isNew = in_array($key, $newlyKeys, true);
+                        $when = $isEarned ? \Illuminate\Support\Carbon::parse($unlocked[$key])->isoFormat('D MMM') : null;
+                    @endphp
+                    <div
+                        class="relative rounded-xl border p-3 text-center transition {{ $isEarned ? 'bg-gold/[0.07] border-gold/30' : 'bg-bg/40 border-line/[0.06]' }}"
+                        @if ($isNew) :class="celebrating ? 'ring-2 ring-gold/50 scale-[1.03]' : ''" @endif
+                    >
+                        @if ($isNew)
+                            <span x-show="celebrating" x-cloak class="absolute inset-0 rounded-xl ring-2 ring-gold/40 animate-ping"></span>
+                        @endif
+                        <div class="text-2xl mb-1 {{ $isEarned ? '' : 'opacity-25 grayscale' }}">{{ $emoji }}</div>
+                        <div class="text-xs font-semibold leading-tight {{ $isEarned ? 'text-text-primary' : 'text-text-secondary/70' }}">{{ $title }}</div>
+                        @if ($isEarned)
+                            <div class="text-[10px] text-gold/80 mt-1">Logrado · {{ $when }}</div>
+                        @else
+                            <div class="text-[10px] text-text-secondary/50 mt-1 leading-snug">{{ $how }}</div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Meta de racha configurable por el usuario --}}
+            <div class="mt-5 pt-4 border-t border-line/[0.06]">
+                <div class="flex items-baseline justify-between mb-2">
+                    <p class="text-[11px] text-text-secondary uppercase tracking-wider">Tu meta diaria</p>
+                    <span class="text-[11px] text-text-secondary">Suma a la racha si cumplís <span class="text-gold font-semibold" x-text="threshold + '%'"></span></span>
+                </div>
+                <div class="grid grid-cols-5 gap-1 bg-bg/50 border border-line/[0.06] p-1 rounded-lg">
+                    @foreach ([50, 60, 70, 80, 90] as $opt)
+                        <button
+                            type="button"
+                            @click="setThreshold({{ $opt }})"
+                            :disabled="saving"
+                            :class="threshold === {{ $opt }} ? 'bg-gold text-black' : 'text-text-secondary hover:text-text-primary'"
+                            class="py-1.5 rounded-md text-xs font-semibold transition disabled:opacity-40"
+                        >{{ $opt }}%</button>
+                    @endforeach
+                </div>
+                <p class="text-[10px] text-text-secondary/60 italic mt-2">Un día flojo no rompe tu racha; dos seguidos sí.</p>
+            </div>
+        </div>
 
         <a href="{{ route('onboarding.show', ['nuevo' => 1]) }}" class="block text-center text-xs text-text-secondary/60 hover:text-gold underline transition">
             Subir nuevo plan
@@ -801,6 +888,7 @@
                                 racha: this.racha,
                                 microcopy: this.microcopy,
                                 unit: this.unitLabel,
+                                fidelidad: this.fidelidad,
                             });
                         }
                     },
@@ -1012,6 +1100,44 @@
                     close() {
                         this.showing = false;
                         this.data = null;
+                    },
+                }
+            }
+
+            function achievements(newly, threshold) {
+                return {
+                    newly: newly || [],
+                    threshold: threshold,
+                    saving: false,
+                    celebrating: false,
+                    init() {
+                        // Celebración sutil al cargar si hubo medalla nueva.
+                        if (this.newly.length) {
+                            this.celebrating = true;
+                            setTimeout(() => { this.celebrating = false; }, 4500);
+                        }
+                    },
+                    async setThreshold(v) {
+                        if (v === this.threshold || this.saving) return;
+                        this.saving = true;
+                        try {
+                            const res = await fetch('{{ route('prefs.streakThreshold') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                },
+                                body: JSON.stringify({ threshold: v }),
+                            });
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            // Reload: el server recalcula la racha con el nuevo umbral.
+                            window.location.reload();
+                        } catch (e) {
+                            console.error('threshold failed', e);
+                            alert('No se pudo cambiar la meta. Reintente.');
+                            this.saving = false;
+                        }
                     },
                 }
             }

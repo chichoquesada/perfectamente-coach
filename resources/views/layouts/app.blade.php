@@ -10,7 +10,7 @@
         @include('partials.assets')
     </head>
     <body class="font-sans antialiased bg-bg text-text-primary">
-        <div class="min-h-screen">
+        <div class="min-h-screen overflow-x-hidden">
             @include('layouts.navigation')
 
             @isset($header)

@@ -27,6 +27,9 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center gap-2">
+                @if (! $isNutri && request()->routeIs('dashboard'))
+                    <x-view-toggle />
+                @endif
                 <x-theme-toggle />
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -53,6 +56,9 @@
             </div>
 
             <div class="-me-2 flex items-center gap-1 sm:hidden">
+                @if (! $isNutri && request()->routeIs('dashboard'))
+                    <x-view-toggle />
+                @endif
                 <x-theme-toggle />
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-text-primary transition">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">

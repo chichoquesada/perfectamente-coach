@@ -35,9 +35,18 @@ class InsightController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
+            // Distinguir "servicio de IA saturado" (503/429 de Google, tras agotar
+            // reintentos y rotación de modelos) de un error real, para no alarmar.
+            $msg = $e->getMessage();
+            $overloaded = str_contains($msg, 'sobrecargados')
+                || str_contains($msg, '503')
+                || str_contains($msg, '429');
+
             return response()->json([
-                'error' => 'No pudimos generar su análisis. Intente más tarde.',
-            ], 500);
+                'error' => $overloaded
+                    ? 'El servicio de IA está saturado en este momento (alta demanda). Espere un minuto y vuelva a generar su análisis.'
+                    : 'No pudimos generar su análisis. Intente más tarde.',
+            ], $overloaded ? 503 : 500);
         }
 
         return response()->json($insight);

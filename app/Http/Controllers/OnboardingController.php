@@ -28,17 +28,43 @@ class OnboardingController extends Controller
 
     public function uploadPdf(Request $request, GeminiExtractorService $gemini): RedirectResponse
     {
+        // NOTA: no usamos las reglas `mimes:`/`mimetypes:` porque internamente
+        // llaman a getMimeType() → Symfony Mime → la extensión php_fileinfo.
+        // En el hosting de producción (ea-php84) fileinfo está DESACTIVADO, así
+        // que ese guessing revienta con 500. Validamos por extensión + magic
+        // bytes (%PDF), que no dependen de fileinfo.
         $request->validate([
-            'pdf' => ['required', 'file', 'mimetypes:application/pdf', 'max:10240'],
+            'pdf' => ['required', 'file', 'extensions:pdf', 'max:10240'],
         ], [
             'pdf.required' => 'Suba el PDF de su plan.',
-            'pdf.mimetypes' => 'El archivo debe ser un PDF válido.',
+            'pdf.extensions' => 'El archivo debe ser un PDF válido.',
             'pdf.max' => 'Máximo 10 MB.',
         ]);
 
+        $file = $request->file('pdf');
+
+        // Chequeo de firma: los PDF empiezan con "%PDF". Sustituye al MIME
+        // guessing sin necesitar fileinfo.
+        if (strncmp((string) file_get_contents($file->getRealPath(), false, null, 0, 4), '%PDF', 4) !== 0) {
+            return back()
+                ->withInput()
+                ->withErrors(['pdf' => 'El archivo no parece ser un PDF válido.']);
+        }
+
         $userId = Auth::id();
-        $path = $request->file('pdf')->store("plans/{$userId}");
-        $absolutePath = Storage::path($path);
+
+        // NO usamos Storage::/storeAs(): el adaptador local de Flysystem
+        // instancia un FinfoMimeTypeDetector en su CONSTRUCTOR (→ new finfo()),
+        // así que cualquier acceso al disco revienta con "Class finfo not found"
+        // cuando fileinfo está desactivado (caso de ea-php84 en prod). Escribimos
+        // el archivo directo con UploadedFile::move() → move_uploaded_file(),
+        // que no toca Flysystem ni fileinfo.
+        $filename = \Illuminate\Support\Str::random(40).'.pdf';
+        $relativeDir = "plans/{$userId}";
+        $absoluteDir = storage_path("app/private/{$relativeDir}");
+        $file->move($absoluteDir, $filename);
+        $path = "{$relativeDir}/{$filename}";
+        $absolutePath = "{$absoluteDir}/{$filename}";
 
         // Subimos timeout para llamadas Gemini (PDFs largos pueden tardar 30-60s).
         set_time_limit(180);
@@ -53,7 +79,8 @@ class OnboardingController extends Controller
             ]);
 
             // Borramos el PDF para no dejar huérfano. El usuario reintenta.
-            Storage::delete($path);
+            // @unlink directo (no Storage::, que reventaría por fileinfo).
+            @unlink($absolutePath);
 
             // Distinguimos "servicio ocupado" (503/429 de Google) de un PDF
             // realmente ilegible, para no culpar al PDF cuando no es la causa.

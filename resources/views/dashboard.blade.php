@@ -1,15 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h1 class="font-serif text-2xl">Hoy</h1>
-        <p class="text-sm text-text-secondary mt-1">{{ now()->isoFormat('dddd, D [de] MMMM') }}</p>
-    </x-slot>
-
-    @if (session('status'))
-        <div class="mb-6 p-4 bg-fiel/10 border border-fiel/30 rounded-xl text-sm text-fiel">
-            {{ session('status') }}
-        </div>
-    @endif
-
     @php
         $data = $plan?->extracted_data ?? [];
         // Nombre de la cuenta (confiable) por encima del extraído del PDF, que puede venir truncado.
@@ -19,13 +8,89 @@
         // $comidas, $mode, $checksToday, $fidelidad, $suplementos, $farmacologia vienen del controller
         $totalSupFarma = count($suplementos) + count($farmacologia);
 
-        // Map itemId => hora actual (para edición reactiva de horas en el cliente).
+        // Map itemId => hora actual (para edición reactiva de horas en el cliente)
+        // + lista de itemIds de comidas (para el cálculo de progreso del día).
         $horasIniciales = [];
+        $comidaIds = [];
         foreach ($comidas as $idx => $c) {
             $id = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$idx);
             $horasIniciales[$id] = $c['hora'] ?? null;
+            $comidaIds[] = $id;
         }
+        // itemIds de suplementos (para el conteo del día cuando el toggle de
+        // fidelidad-suplementos está ON). Mismo criterio de id que en los loops.
+        $supplementIds = [];
+        foreach ($suplementos as $idx => $s) {
+            $supplementIds[] = $s['id'] ?? ('sup-'.\Illuminate\Support\Str::slug($s['nombre'] ?? 'item-'.$idx));
+        }
+        // Racha actual (días cumplidos seguidos) — dato ya calculado para el heatmap.
+        $rachaActual = data_get($heatmapStats ?? [], 'racha_actual', 0);
     @endphp
+
+    <x-slot name="header">
+        <div x-data class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+            {{-- Izquierda: Hoy + fecha --}}
+            <div class="shrink-0">
+                <h1 class="text-2xl font-bold tracking-tight">Hoy</h1>
+                <p class="text-sm text-text-secondary mt-1">{{ now()->isoFormat('dddd, D [de] MMMM') }}</p>
+            </div>
+
+            @if ($plan)
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                    {{-- HUD del día: anillo de progreso + microcopy + racha --}}
+                    <div class="flex items-center gap-3" x-show="$store.hud.ready" x-cloak>
+                        <div class="relative h-12 w-12 shrink-0 transition-transform duration-500"
+                             :class="$store.hud.celebrate ? 'scale-110' : ''">
+                            <svg viewBox="0 0 44 44" class="h-12 w-12 -rotate-90">
+                                <circle cx="22" cy="22" r="18" fill="none" stroke-width="4" class="stroke-line/10" />
+                                <circle cx="22" cy="22" r="18" fill="none" stroke-width="4" stroke-linecap="round"
+                                        class="transition-all duration-700 ease-out"
+                                        :class="$store.hud.pct === 100 ? 'stroke-fiel' : 'stroke-gold'"
+                                        stroke-dasharray="113"
+                                        :stroke-dashoffset="113 - 113 * $store.hud.pct / 100" />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center text-[11px] font-bold"
+                                 :class="$store.hud.pct === 100 ? 'text-fiel' : 'text-text-primary'"
+                                 x-text="$store.hud.pct + '%'"></div>
+                            {{-- Celebración sutil al cerrar el día --}}
+                            <span x-show="$store.hud.celebrate" x-cloak
+                                  class="absolute inset-0 rounded-full ring-2 ring-fiel/50 animate-ping"></span>
+                        </div>
+                        <div class="leading-tight">
+                            <div class="text-sm font-semibold" x-text="$store.hud.microcopy"></div>
+                            <div class="text-xs text-text-secondary mt-0.5">
+                                <span x-text="$store.hud.marked"></span>/<span x-text="$store.hud.total"></span> <span x-text="$store.hud.unit"></span><template x-if="$store.hud.racha > 0"><span> · <span class="font-semibold text-gold">🔥 <span x-text="$store.hud.racha"></span></span></span></template>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Identidad del plan --}}
+                    @if ($paciente)
+                        <div class="sm:text-right sm:border-l border-line/10 sm:pl-6">
+                            <p class="text-[10px] text-gold tracking-[0.25em] uppercase">Su plan</p>
+                            <p class="text-base font-bold tracking-tight leading-tight">{{ $paciente }}</p>
+                            @if ($objetivo || $metodologia)
+                                <div class="flex flex-wrap sm:justify-end items-center gap-2 mt-1.5">
+                                    @if ($objetivo)
+                                        <span class="text-xs font-medium px-3 py-1 bg-line/5 border border-line/10 rounded-md text-text-secondary">{{ $objetivo }}</span>
+                                    @endif
+                                    @if ($metodologia)
+                                        <span class="text-xs font-semibold px-3 py-1 bg-gold/10 border border-gold/25 rounded-md text-gold">{{ $metodologia }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
+    </x-slot>
+
+    @if (session('status'))
+        <div class="mb-6 p-4 bg-fiel/10 border border-fiel/30 rounded-xl text-sm text-fiel">
+            {{ session('status') }}
+        </div>
+    @endif
 
     @if (! $plan)
         <div class="bg-bg-card border border-line/[0.06] rounded-2xl p-8 text-center">
@@ -34,41 +99,21 @@
             <p class="text-text-secondary text-sm mb-6 max-w-sm mx-auto">
                 Suba el PDF de su nutricionista. La IA lo lee, lo organiza y le entrega su tablero diario.
             </p>
-            <a href="{{ route('onboarding.show') }}" class="inline-flex items-center gap-2 bg-gold text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gold/90 transition">
+            <a href="{{ route('onboarding.show') }}" class="inline-flex items-center gap-2 bg-gold text-black px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-gold/90 transition">
                 Subir mi plan <span aria-hidden="true">→</span>
             </a>
         </div>
     @else
     <div class="grid lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 space-y-6">
+    <div class="lg:col-span-2 space-y-6 min-w-0">
         <div
-            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}', {{ \Illuminate\Support\Js::from($horasIniciales) }}, {{ $supplementsAffect ? 'true' : 'false' }})"
+            x-data="dashboard({{ \Illuminate\Support\Js::from($checksToday) }}, {{ \Illuminate\Support\Js::from($notesToday) }}, {{ $fidelidad }}, {{ count($comidas) }}, '{{ $mode }}', {{ \Illuminate\Support\Js::from($horasIniciales) }}, {{ $supplementsAffect ? 'true' : 'false' }}, {{ \Illuminate\Support\Js::from($comidaIds) }}, {{ (int) $rachaActual }}, {{ \Illuminate\Support\Js::from($supplementIds) }})"
             class="bg-bg-card border border-line/[0.06] rounded-2xl p-6 sm:p-8"
         >
-            <div class="flex items-start justify-between gap-4 mb-6">
-                <div>
-                    <p class="text-xs text-gold tracking-[0.25em] uppercase mb-2">Su plan</p>
-                    @if ($paciente)
-                        <h2 class="font-serif text-2xl mb-1">{{ $paciente }}</h2>
-                    @endif
-                    @if ($objetivo)
-                        <p class="text-sm text-text-secondary">{{ $objetivo }}</p>
-                    @endif
-                    <a href="{{ route('plans.showOne', $plan) }}" class="inline-flex items-center gap-1 text-xs text-gold hover:text-gold/80 underline mt-2 transition">
-                        Ver detalle del plan <span aria-hidden="true">→</span>
-                    </a>
-                </div>
-                @if ($metodologia)
-                    <span class="shrink-0 text-xs px-3 py-1 bg-line/5 border border-line/10 rounded-full text-text-secondary">
-                        {{ $metodologia }}
-                    </span>
-                @endif
-            </div>
-
             {{-- Selector de modo del día --}}
             <div class="mb-6">
                 <p class="text-xs text-text-secondary tracking-wider uppercase mb-2">Hoy es día de</p>
-                <div class="grid grid-cols-3 gap-2 bg-bg/50 border border-line/[0.06] p-1 rounded-full">
+                <div class="grid grid-cols-3 gap-2 bg-bg/50 border border-line/[0.06] p-1 rounded-lg">
                     @foreach ([
                         'descanso' => ['Descanso', '🛌'],
                         'entreno' => ['Entreno', '💪'],
@@ -79,7 +124,7 @@
                             @click="setMode('{{ $key }}')"
                             :disabled="modeLoading"
                             :class="mode === '{{ $key }}' ? 'bg-gold text-black' : 'text-text-secondary hover:text-text-primary'"
-                            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition"
+                            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-semibold transition"
                         >
                             <span>{{ $icon }}</span>
                             <span>{{ $label }}</span>
@@ -88,6 +133,78 @@
                 </div>
             </div>
 
+            {{-- ===================== VISTA CHECKLIST (rápida) =====================
+                 El toggle Checklist/Detalle vive en el header (navigation), via
+                 $store.mealView. Default auto por device, override persistido. --}}
+            <div x-show="$store.mealView.current === 'checklist'" class="space-y-4">
+                {{-- (El progreso/racha/microcopy del día vive en el HUD del header.) --}}
+
+                {{-- Comidas (compactas) --}}
+                @if (count($comidas) > 0)
+                    <div class="space-y-2">
+                        @foreach ($comidas as $c)
+                            @php $itemId = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$loop->index); @endphp
+                            <div class="bg-bg/50 border-l-2 rounded-xl p-2.5 transition"
+                                :class="{
+                                    'border-fiel': checks['{{ $itemId }}'] === 'fiel',
+                                    'border-parcial': checks['{{ $itemId }}'] === 'parcial',
+                                    'border-nofiel': checks['{{ $itemId }}'] === 'nofiel',
+                                    'border-line/[0.04]': !checks['{{ $itemId }}'],
+                                }">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 flex items-center justify-center bg-line/5 rounded-lg text-base shrink-0">{{ $c['icono_sugerido'] ?? '🍽️' }}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-serif text-sm truncate">{{ $c['nombre'] ?? 'Comida' }}</div>
+                                    </div>
+                                    <span class="text-[11px] text-text-secondary uppercase tracking-wider shrink-0"
+                                          x-show="horas['{{ $itemId }}']" x-text="horas['{{ $itemId }}']"></span>
+                                </div>
+                                <x-check-toggle :item-id="$itemId" :compact="true" class="mt-2" />
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                {{-- Suplementos / Farmacología (compactos) --}}
+                @if ($totalSupFarma > 0)
+                    @foreach ([
+                        ['items' => $suplementos, 'label' => '🥤 Suplementos'],
+                        ['items' => $farmacologia, 'label' => '💊 Farmacología'],
+                    ] as $section)
+                        @if (count($section['items']) > 0)
+                            <div>
+                                <p class="text-[11px] text-gold tracking-[0.2em] uppercase mb-2">{{ $section['label'] }}</p>
+                                <div class="space-y-2">
+                                    @foreach ($section['items'] as $s)
+                                        @php
+                                            $sid = $s['id'] ?? ('sup-'.\Illuminate\Support\Str::slug($s['nombre'] ?? 'item-'.$loop->index));
+                                            $sub = trim(implode(' · ', array_filter([$s['dosis'] ?? null, $s['frecuencia'] ?? null])));
+                                        @endphp
+                                        <div class="bg-bg/50 border-l-2 rounded-xl p-2.5 transition"
+                                            :class="{
+                                                'border-fiel': checks['{{ $sid }}'] === 'fiel',
+                                                'border-parcial': checks['{{ $sid }}'] === 'parcial',
+                                                'border-nofiel': checks['{{ $sid }}'] === 'nofiel',
+                                                'border-line/[0.04]': !checks['{{ $sid }}'],
+                                            }">
+                                            <div class="min-w-0">
+                                                <div class="font-serif text-sm truncate">{{ $s['nombre'] ?? '' }}</div>
+                                                @if ($sub !== '')
+                                                    <div class="text-[11px] text-text-secondary truncate">{{ $sub }}</div>
+                                                @endif
+                                            </div>
+                                            <x-check-toggle :item-id="$sid" :compact="true" class="mt-2" />
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                @endif
+            </div>
+
+            {{-- ===================== VISTA DETALLE (full) ===================== --}}
+            <div x-show="$store.mealView.current === 'full'" x-cloak class="space-y-6">
             <div class="grid grid-cols-3 gap-3 text-center mb-6">
                 <div class="bg-bg/50 border border-line/[0.06] rounded-xl py-3">
                     <div class="font-serif text-2xl text-gold">{{ count($comidas) }}</div>
@@ -123,69 +240,53 @@
                                 'border-line/[0.04]': !checks['{{ $itemId }}'],
                             }"
                         >
-                            <div class="flex items-center gap-3 p-3">
-                                <div class="w-10 h-10 flex items-center justify-center bg-line/5 rounded-lg text-xl shrink-0">
-                                    {{ $c['icono_sugerido'] ?? '🍽️' }}
-                                </div>
-                                <div
-                                    @if ($tieneDetalle) @click="toggleExpand('{{ $itemId }}')" @endif
-                                    class="flex-1 min-w-0 {{ $tieneDetalle ? 'cursor-pointer' : '' }}"
-                                >
-                                    {{-- Hora: editable. Si no tiene, botón para asignarla. --}}
-                                    <button
-                                        type="button"
-                                        @click.stop="openHora('{{ $itemId }}')"
-                                        class="text-xs uppercase tracking-wider transition"
-                                        :class="horas['{{ $itemId }}'] ? 'text-text-secondary hover:text-gold' : 'text-gold/70 hover:text-gold'"
-                                    >
-                                        <span x-show="horas['{{ $itemId }}']" x-text="horas['{{ $itemId }}']"></span>
-                                        <span x-show="!horas['{{ $itemId }}']">+ asignar hora</span>
-                                    </button>
-                                    <div class="font-serif text-base truncate flex items-center gap-1.5">
-                                        <span class="truncate">{{ $c['nombre'] ?? 'Comida' }}</span>
-                                        @if ($tieneDetalle)
-                                            <span class="text-text-secondary/50 text-xs shrink-0" x-text="expanded === '{{ $itemId }}' ? '▲' : '▼'"></span>
-                                        @endif
+                            <div class="p-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 flex items-center justify-center bg-line/5 rounded-lg text-xl shrink-0">
+                                        {{ $c['icono_sugerido'] ?? '🍽️' }}
                                     </div>
                                     <div
-                                        x-show="notes['{{ $itemId }}'] && noteOpen !== '{{ $itemId }}'"
-                                        @click.stop="openNote('{{ $itemId }}')"
-                                        class="text-xs text-text-secondary italic mt-1 cursor-pointer hover:text-text-primary transition truncate"
-                                        x-text="notes['{{ $itemId }}']"
-                                    ></div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    @click="openNote('{{ $itemId }}')"
-                                    :class="notes['{{ $itemId }}'] ? 'text-gold' : 'text-text-secondary/40 hover:text-text-secondary'"
-                                    class="w-7 h-7 flex items-center justify-center text-sm transition shrink-0"
-                                    title="Agregar nota"
-                                >
-                                    <span x-show="!notes['{{ $itemId }}']">+</span>
-                                    <span x-show="notes['{{ $itemId }}']" x-cloak>✎</span>
-                                </button>
-
-                                {{-- Toggle de estado compacto (fool-proof): 4 opciones siempre visibles --}}
-                                <div class="flex items-center gap-1 shrink-0 bg-line/5 rounded-lg p-0.5">
-                                    @foreach ([
-                                        'fiel' => ['✓', 'bg-fiel text-black'],
-                                        'parcial' => ['~', 'bg-parcial text-black'],
-                                        'nofiel' => ['✗', 'bg-nofiel text-white'],
-                                        'na' => ['NA', 'bg-line/40 text-text-primary'],
-                                    ] as $st => [$icon, $activeClass])
+                                        @if ($tieneDetalle) @click="toggleExpand('{{ $itemId }}')" @endif
+                                        class="flex-1 min-w-0 {{ $tieneDetalle ? 'cursor-pointer' : '' }}"
+                                    >
+                                        {{-- Hora: editable. Si no tiene, botón para asignarla. --}}
                                         <button
                                             type="button"
-                                            @click="setStatus('{{ $itemId }}', '{{ $st }}')"
-                                            :disabled="loading['{{ $itemId }}']"
-                                            :class="checks['{{ $itemId }}'] === '{{ $st }}'
-                                                ? '{{ $activeClass }}'
-                                                : 'text-text-secondary/50 hover:text-text-primary'"
-                                            class="w-7 h-7 rounded-md flex items-center justify-center {{ $st === 'na' ? 'text-[11px]' : 'text-sm' }} font-bold transition disabled:opacity-40"
-                                            title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel', 'na' => 'No aplica hoy'][$st] }}"
-                                        >{{ $icon }}</button>
-                                    @endforeach
+                                            @click.stop="openHora('{{ $itemId }}')"
+                                            class="text-xs uppercase tracking-wider transition"
+                                            :class="horas['{{ $itemId }}'] ? 'text-text-secondary hover:text-gold' : 'text-gold/70 hover:text-gold'"
+                                        >
+                                            <span x-show="horas['{{ $itemId }}']" x-text="horas['{{ $itemId }}']"></span>
+                                            <span x-show="!horas['{{ $itemId }}']">+ asignar hora</span>
+                                        </button>
+                                        <div class="font-serif text-base flex items-center gap-1.5">
+                                            <span class="truncate">{{ $c['nombre'] ?? 'Comida' }}</span>
+                                            @if ($tieneDetalle)
+                                                <span class="text-text-secondary/50 text-xs shrink-0" x-text="expanded === '{{ $itemId }}' ? '▲' : '▼'"></span>
+                                            @endif
+                                        </div>
+                                        <div
+                                            x-show="notes['{{ $itemId }}'] && noteOpen !== '{{ $itemId }}'"
+                                            @click.stop="openNote('{{ $itemId }}')"
+                                            class="text-xs text-text-secondary italic mt-1 cursor-pointer hover:text-text-primary transition truncate"
+                                            x-text="notes['{{ $itemId }}']"
+                                        ></div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        @click="openNote('{{ $itemId }}')"
+                                        :class="notes['{{ $itemId }}'] ? 'text-gold' : 'text-text-secondary/40 hover:text-text-secondary'"
+                                        class="w-9 h-9 flex items-center justify-center text-base transition shrink-0 rounded-lg hover:bg-line/5 active:scale-95"
+                                        title="Agregar nota"
+                                    >
+                                        <span x-show="!notes['{{ $itemId }}']">+</span>
+                                        <span x-show="notes['{{ $itemId }}']" x-cloak>✎</span>
+                                    </button>
                                 </div>
+
+                                {{-- Estado del check: fila full-width, fácil de tocar en móvil --}}
+                                <x-check-toggle :item-id="$itemId" class="mt-3" />
                             </div>
 
                             {{-- Detalle expandible: qué comer --}}
@@ -236,7 +337,7 @@
                                         class="bg-bg border border-line/10 text-text-primary focus:border-gold focus:ring-1 focus:ring-gold rounded-lg px-3 py-1.5 text-sm transition"
                                     >
                                     <button type="button" @click="saveHora('{{ $itemId }}')" :disabled="loading['{{ $itemId }}']"
-                                        class="text-xs bg-gold text-black px-4 py-1.5 rounded-full font-semibold hover:bg-gold/90 disabled:opacity-40 transition">Guardar</button>
+                                        class="text-xs bg-gold text-black px-4 py-1.5 rounded-lg font-semibold hover:bg-gold/90 disabled:opacity-40 transition">Guardar</button>
                                     <button type="button" @click="clearHora('{{ $itemId }}')" :disabled="loading['{{ $itemId }}']"
                                         x-show="horas['{{ $itemId }}']"
                                         class="text-xs text-text-secondary/60 hover:text-nofiel px-2 py-1.5 transition">Sin hora</button>
@@ -271,7 +372,7 @@
                                             type="button"
                                             @click="saveNote('{{ $itemId }}')"
                                             :disabled="loading['{{ $itemId }}']"
-                                            class="text-xs bg-gold text-black px-4 py-1 rounded-full font-semibold hover:bg-gold/90 disabled:opacity-40 transition"
+                                            class="text-xs bg-gold text-black px-4 py-1 rounded-lg font-semibold hover:bg-gold/90 disabled:opacity-40 transition"
                                         >Guardar</button>
                                     </div>
                                 </div>
@@ -337,8 +438,8 @@
                                             'border-line/[0.04]': !checks['{{ $sid }}'],
                                         }"
                                     >
-                                        <div class="flex items-center gap-3 p-3">
-                                            <div class="flex-1 min-w-0">
+                                        <div class="p-3">
+                                            <div class="min-w-0">
                                                 <div class="font-serif text-base truncate">{{ $s['nombre'] ?? '' }}</div>
                                                 @if ($sub !== '')
                                                     <div class="text-xs text-text-secondary truncate">{{ $sub }}</div>
@@ -347,26 +448,8 @@
                                                     <div class="text-xs text-text-secondary/60 italic truncate">{{ $s['nota'] }}</div>
                                                 @endif
                                             </div>
-                                            {{-- Toggle compacto de estado (igual que las comidas) --}}
-                                            <div class="flex items-center gap-1 shrink-0 bg-line/5 rounded-lg p-0.5">
-                                                @foreach ([
-                                                    'fiel' => ['✓', 'bg-fiel text-black'],
-                                                    'parcial' => ['~', 'bg-parcial text-black'],
-                                                    'nofiel' => ['✗', 'bg-nofiel text-white'],
-                                                    'na' => ['NA', 'bg-line/40 text-text-primary'],
-                                                ] as $st => [$icon, $activeClass])
-                                                    <button
-                                                        type="button"
-                                                        @click="setStatus('{{ $sid }}', '{{ $st }}')"
-                                                        :disabled="loading['{{ $sid }}']"
-                                                        :class="checks['{{ $sid }}'] === '{{ $st }}'
-                                                            ? '{{ $activeClass }}'
-                                                            : 'text-text-secondary/50 hover:text-text-primary'"
-                                                        class="w-7 h-7 rounded-md flex items-center justify-center {{ $st === 'na' ? 'text-[11px]' : 'text-sm' }} font-bold transition disabled:opacity-40"
-                                                        title="{{ ['fiel' => 'Fiel', 'parcial' => 'Parcial', 'nofiel' => 'No fiel', 'na' => 'No aplica hoy'][$st] }}"
-                                                    >{{ $icon }}</button>
-                                                @endforeach
-                                            </div>
+                                            {{-- Estado del check (mismo control que las comidas) --}}
+                                            <x-check-toggle :item-id="$sid" class="mt-3" />
                                         </div>
                                     </div>
                                 @endforeach
@@ -378,10 +461,11 @@
                     </p>
                 </div>
             @endif
+            </div> {{-- close vista full --}}
         </div>
     </div> {{-- close lg:col-span-2 --}}
 
-    <aside class="space-y-6">
+    <aside class="space-y-6 min-w-0">
         {{-- Análisis IA semanal --}}
         <div
             x-data="weeklyInsight()"
@@ -469,11 +553,11 @@
                 </div>
 
                 {{-- Selector de rango --}}
-                <div class="grid grid-cols-3 gap-1 bg-bg/50 border border-line/[0.06] p-1 rounded-full mb-5 text-xs">
+                <div class="grid grid-cols-3 gap-1 bg-bg/50 border border-line/[0.06] p-1 rounded-lg mb-5 text-xs">
                     @foreach (['7' => 'Semana', '30' => 'Mes', '90' => '90 días'] as $r => $lbl)
                         <a
                             href="{{ route('dashboard', ['range' => $r]) }}"
-                            class="text-center py-1.5 rounded-full font-semibold transition {{ (int) $r === $range ? 'bg-gold text-black' : 'text-text-secondary hover:text-text-primary' }}"
+                            class="text-center py-1.5 rounded-md font-semibold transition {{ (int) $r === $range ? 'bg-gold text-black' : 'text-text-secondary hover:text-text-primary' }}"
                         >{{ $lbl }}</a>
                     @endforeach
                 </div>
@@ -658,7 +742,7 @@
     </div> {{-- close grid lg:grid-cols-3 --}}
 
         <script>
-            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode, initialHoras, supplementsAffect) {
+            function dashboard(initialChecks, initialNotes, fidelidad, totalComidas, mode, initialHoras, supplementsAffect, comidaIds, racha, supplementIds) {
                 return {
                     checks: initialChecks,
                     notes: initialNotes,
@@ -675,6 +759,51 @@
                     horaDraft: '',
                     supplementsAffect: supplementsAffect,
                     prefLoading: false,
+                    // Progreso/animación del día (la vista checklist|full vive en
+                    // $store.mealView, controlada por el toggle del header).
+                    comidaIds: comidaIds || [],
+                    supplementIds: supplementIds || [],
+                    racha: racha || 0,
+                    justBumped: false,
+                    // Ítems que cuentan en el progreso del día: comidas + suplementos
+                    // SI el usuario activó que cuenten en su fidelidad. (Farma nunca.)
+                    get countableIds() {
+                        return this.supplementsAffect
+                            ? this.comidaIds.concat(this.supplementIds)
+                            : this.comidaIds;
+                    },
+                    get totalCount() { return this.countableIds.length; },
+                    get unitLabel() { return this.supplementsAffect ? 'ítems' : 'comidas'; },
+                    // Cuántos ítems del día ya tienen estado marcado (progreso).
+                    get markedCount() {
+                        return this.countableIds.filter(id => !!this.checks[id]).length;
+                    },
+                    get progressPct() {
+                        if (!this.totalCount) return 0;
+                        return Math.round((this.markedCount / this.totalCount) * 100);
+                    },
+                    // Microcopy de coach según el avance del día.
+                    get microcopy() {
+                        const m = this.markedCount, t = this.totalCount;
+                        if (t === 0) return 'Tu día, paso a paso.';
+                        if (m === 0) return 'Empecemos el día 💪';
+                        if (m >= t) return this.fidelidad === 100 ? '¡Día perfecto! ✨' : '¡Completaste el día!';
+                        if (this.progressPct >= 60) return '¡Vas muy bien! 🙌';
+                        return 'Paso a paso, vas bien.';
+                    },
+                    // Alpine llama init() al montar: empuja el progreso al HUD del header.
+                    init() { this.syncHud(); },
+                    syncHud() {
+                        if (this.$store?.hud) {
+                            this.$store.hud.sync({
+                                marked: this.markedCount,
+                                total: this.totalCount,
+                                racha: this.racha,
+                                microcopy: this.microcopy,
+                                unit: this.unitLabel,
+                            });
+                        }
+                    },
                     async toggleSupplementsFidelity() {
                         if (this.prefLoading) return;
                         this.prefLoading = true;
@@ -816,6 +945,7 @@
                     },
                     async send(itemId, status) {
                         this.loading[itemId] = true;
+                        const prevPct = this.progressPct;
                         try {
                             const res = await fetch('{{ route('checks.store') }}', {
                                 method: 'POST',
@@ -835,6 +965,14 @@
                                 delete this.notes[itemId]; // backend ya borró el check entero
                             }
                             this.fidelidad = json.fidelidad;
+                            // Micro-animación: pulso breve del contador de progreso al marcar.
+                            this.justBumped = true;
+                            setTimeout(() => { this.justBumped = false; }, 350);
+                            // Sincronizar HUD del header; celebrar si se cerró el día.
+                            this.syncHud();
+                            if (this.progressPct === 100 && prevPct < 100) {
+                                this.$store?.hud?.fireCelebrate();
+                            }
                         } catch (e) {
                             console.error('check failed', e);
                             alert('No se pudo guardar. Reintente.');

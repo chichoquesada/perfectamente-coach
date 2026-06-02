@@ -6,6 +6,7 @@ use App\Models\DailyCheck;
 use App\Models\NutritionalPlan;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class WeeklyInsightService
@@ -37,31 +38,7 @@ class WeeklyInsightService
 
         $context = $this->buildContext($user, $plan);
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'X-goog-api-key' => $this->apiKey,
-        ])
-            ->withOptions(['verify' => $this->caBundle()])
-            ->timeout(60)
-            ->post(
-                "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
-                [
-                    'contents' => [[
-                        'parts' => [[
-                            'text' => $this->prompt($context),
-                        ]],
-                    ]],
-                    'generationConfig' => [
-                        'responseMimeType' => 'application/json',
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 4096,
-                    ],
-                ]
-            );
-
-        if (! $response->successful()) {
-            throw new RuntimeException("Gemini API error {$response->status()}: " . $response->body());
-        }
+        $response = $this->callGeminiWithFallback($this->prompt($context));
 
         $jsonText = (string) $response->json('candidates.0.content.parts.0.text');
         $cleaned = $this->cleanJsonText($jsonText);
@@ -110,17 +87,39 @@ class WeeklyInsightService
             ->get();
 
         $extracted = $plan->extracted_data ?? [];
+
+        // Respetar la preferencia del usuario: si los suplementos cuentan en su
+        // fidelidad, también entran al análisis (mismo criterio que PlanData).
+        // La farmacología NUNCA cuenta. 'na' se ignora.
+        $supplementsCount = (bool) $user->supplements_affect_fidelity;
+
         $comidas = $extracted['comidas'] ?? [];
-        $totalComidas = count($comidas);
+        $comidaNames = [];
+        foreach ($comidas as $idx => $c) {
+            $id = $c['id'] ?? \Illuminate\Support\Str::slug($c['nombre'] ?? 'comida-'.$idx);
+            $comidaNames[$id] = $c['nombre'] ?? null;
+        }
+
+        $suplementos = $supplementsCount ? \App\Support\PlanData::supplements($extracted) : [];
+        $supNames = [];
+        foreach ($suplementos as $s) {
+            $supNames[$s['item_id']] = $s['nombre'] ?? null;
+        }
+
+        // Conjunto contable: comidas + (suplementos si el toggle está ON).
+        $countableIds = array_merge(array_keys($comidaNames), array_keys($supNames));
+        $countablePorDia = count($countableIds);
         $diasContados = 7;
 
-        // Score por día y por comida
+        // Score por día y por ítem (solo ítems contables; excluye farma y 'na').
         $byDay = [];
         $byMeal = [];
 
         foreach ($checks as $c) {
-            // 'na' (no aplica ese día) se ignora: no aporta al análisis.
             if ($c->status === 'na') {
+                continue;
+            }
+            if (! in_array($c->item_id, $countableIds, true)) {
                 continue;
             }
             $weight = match ($c->status) {
@@ -132,13 +131,14 @@ class WeeklyInsightService
             $byMeal[$c->item_id][$c->status]++;
         }
 
-        $scorePromedio = $totalComidas > 0 && $diasContados > 0
-            ? (int) round((array_sum($byDay) / ($totalComidas * $diasContados)) * 100)
+        $scorePromedio = $countablePorDia > 0 && $diasContados > 0
+            ? (int) round((array_sum($byDay) / ($countablePorDia * $diasContados)) * 100)
             : 0;
 
-        return [
+        $context = [
             'paciente' => $extracted['paciente']['nombre'] ?? 'Atleta',
             'objetivo' => $extracted['objetivos']['principal'] ?? null,
+            'incluye_suplementos' => $supplementsCount,
             'comidas_plan' => array_map(fn ($c) => [
                 'id' => $c['id'] ?? null,
                 'nombre' => $c['nombre'] ?? null,
@@ -146,10 +146,22 @@ class WeeklyInsightService
             ], $comidas),
             'checks_por_dia' => $byDay,
             'comidas_marcadas' => $byMeal,
-            'total_comidas_plan' => $totalComidas,
+            'total_items_contables' => $countablePorDia,
             'rango' => "$start a $end",
             'score_promedio' => $scorePromedio,
         ];
+
+        // Solo incluimos los suplementos en el contexto si cuentan (toggle ON),
+        // para que la IA pueda comentarlos como parte de la adherencia.
+        if ($supplementsCount && count($supNames) > 0) {
+            $context['suplementos_plan'] = array_map(
+                fn ($id, $nombre) => ['id' => $id, 'nombre' => $nombre],
+                array_keys($supNames),
+                array_values($supNames)
+            );
+        }
+
+        return $context;
     }
 
     private function prompt(array $context): string
@@ -195,12 +207,98 @@ Devuelva un análisis JSON con esta estructura EXACTA:
 }
 
 REGLAS DURAS:
+- Si "incluye_suplementos" es true, considere también la adherencia a los suplementos (suplementos_plan) como parte del análisis, igual que las comidas. La farmacología NUNCA se analiza.
 - Reconozca lo que el usuario hizo bien antes de mencionar lo que falta. Siempre.
 - Si el usuario tiene 0 checks la semana entera: tono "apoyo", insight cálido tipo "Cada gran historia tiene un primer capítulo. El suyo empieza con un check.", recomendación que invite sin presionar.
 - NUNCA invente patrones que no estén en los datos.
 - "comidas problemáticas" es solo el nombre técnico del campo: NO use esa palabra hacia el usuario, hable de "zonas de crecimiento" o "espacio para mejorar".
 - Devuelva SOLO el JSON. Sin markdown, sin explicaciones.
 PROMPT;
+    }
+
+    /**
+     * Modelos a intentar, en orden (configurado primero). Mismo patrón que
+     * GeminiExtractorService: si Google reporta sobrecarga (503/429/500) en uno,
+     * caemos al siguiente. Se deduplican.
+     *
+     * @return list<string>
+     */
+    private function modelCandidates(): array
+    {
+        return array_values(array_unique([
+            $this->model,
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-flash-latest',
+        ]));
+    }
+
+    /**
+     * Llama a Gemini probando cada modelo candidato, con hasta 3 reintentos por
+     * modelo y backoff (2s/4s) ante 503/429/500 (servicio saturado). Errores
+     * definitivos (400/401/404…) cortan de inmediato.
+     *
+     * @return \Illuminate\Http\Client\Response
+     */
+    private function callGeminiWithFallback(string $promptText)
+    {
+        $payload = [
+            'contents' => [[
+                'parts' => [[
+                    'text' => $promptText,
+                ]],
+            ]],
+            'generationConfig' => [
+                'responseMimeType' => 'application/json',
+                'temperature' => 0.7,
+                'maxOutputTokens' => 4096,
+            ],
+        ];
+
+        $lastStatus = 0;
+        $lastBody = '';
+
+        foreach ($this->modelCandidates() as $model) {
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
+                $response = Http::withHeaders([
+                    'Content-Type' => 'application/json',
+                    'X-goog-api-key' => $this->apiKey,
+                ])
+                    ->withOptions(['verify' => $this->caBundle()])
+                    ->timeout(60)
+                    ->post(
+                        "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent",
+                        $payload
+                    );
+
+                if ($response->successful()) {
+                    return $response;
+                }
+
+                $lastStatus = $response->status();
+                $lastBody = $response->body();
+
+                if (! in_array($lastStatus, [429, 500, 503], true)) {
+                    // Error definitivo: no insistir.
+                    throw new RuntimeException("Gemini API error {$lastStatus}: {$lastBody}");
+                }
+
+                Log::warning('Insight: Gemini sobrecargado, reintentando', [
+                    'model' => $model,
+                    'attempt' => $attempt,
+                    'status' => $lastStatus,
+                ]);
+
+                if ($attempt < 3) {
+                    sleep(2 * $attempt); // 2s, luego 4s
+                }
+            }
+            // Este modelo sigue caído: probamos el siguiente.
+        }
+
+        throw new RuntimeException(
+            "Gemini API error {$lastStatus} (todos los modelos sobrecargados): {$lastBody}"
+        );
     }
 
     private function caBundle(): string|bool

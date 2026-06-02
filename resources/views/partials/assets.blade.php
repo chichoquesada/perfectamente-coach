@@ -17,7 +17,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap" rel="stylesheet">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -43,11 +43,26 @@
                     line: pmColor('--c-line'),
                 },
                 fontFamily: {
-                    sans: ['Inter', 'system-ui', 'sans-serif'],
-                    serif: ['Lora', 'Georgia', 'serif'],
+                    // Montserrat en toda la app (UI + titulares). Mantenemos el slot
+                    // "serif" apuntando a Montserrat para no tener que editar cada
+                    // titular que usa font-serif.
+                    sans: ['Montserrat', 'system-ui', 'sans-serif'],
+                    serif: ['Montserrat', 'system-ui', 'sans-serif'],
                 },
                 borderColor: {
                     DEFAULT: 'rgb(var(--c-line) / 0.06)',
+                },
+                // Estética más "arquitectónica": radios mínimos (no el look redondo
+                // suave). Se sobreescribe el scale; `full` se mantiene para círculos
+                // reales (toggles de ícono, spinners, barra de progreso).
+                borderRadius: {
+                    DEFAULT: '3px',
+                    sm: '2px',
+                    md: '4px',
+                    lg: '5px',
+                    xl: '6px',
+                    '2xl': '8px',
+                    '3xl': '10px',
                 },
             }
         }
@@ -89,4 +104,39 @@
     html.light .pm-moon { display: none; }
 </style>
 
+<script>
+    // Store global de la vista del chequeo (checklist | full). Vive fuera del
+    // dashboard para que el toggle del header (navigation) y el dashboard
+    // compartan el mismo estado. Default: preferencia guardada, o auto por
+    // device (móvil → checklist, escritorio ≥1024px → detalle).
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('mealView', {
+            current: (function () {
+                try { const s = localStorage.getItem('pm.mealView'); if (s === 'checklist' || s === 'full') return s; } catch (e) { /* ignore */ }
+                try { return window.matchMedia('(min-width: 1024px)').matches ? 'full' : 'checklist'; } catch (e) { /* ignore */ }
+                return 'checklist';
+            })(),
+            set(v) {
+                this.current = v;
+                try { localStorage.setItem('pm.mealView', v); } catch (e) { /* ignore */ }
+            },
+        });
+
+        // HUD del día: progreso compartido entre el header (anillo) y el
+        // dashboard. El componente dashboard() lo sincroniza con sync().
+        Alpine.store('hud', {
+            marked: 0, total: 0, racha: 0, microcopy: '', unit: 'comidas', ready: false, celebrate: false,
+            get pct() { return this.total ? Math.round((this.marked / this.total) * 100) : 0; },
+            sync(d) {
+                this.marked = d.marked; this.total = d.total;
+                this.racha = d.racha; this.microcopy = d.microcopy;
+                this.unit = d.unit || 'comidas'; this.ready = true;
+            },
+            fireCelebrate() {
+                this.celebrate = true;
+                setTimeout(() => { this.celebrate = false; }, 1800);
+            },
+        });
+    });
+</script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

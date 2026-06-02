@@ -980,8 +980,8 @@
         <span class="affiliate-stat-num">30%</span>
         <span class="affiliate-stat-label">de comisión recurrente</span>
       </div>
-      <p>Recomiende la app a sus clientes con su link único. Cada vez que uno paga Pro, usted gana mes a mes. Ellos cumplen mejor su plan, usted recibe ingresos pasivos. Sin papeleo, sin dashboards complicados.</p>
-      <a href="{{ route('register') }}?role=coach" class="hero-cta">Solicitar mi link de coach <span class="hero-cta-arrow">→</span></a>
+      <p>Gestione la adherencia de toda su cartera en una pantalla y recomiende la app a sus clientes con su link único. Ellos cumplen mejor su plan, usted recibe ingresos pasivos. Sin papeleo, sin dashboards complicados.</p>
+      <a href="{{ route('register.nutri') }}" class="hero-cta">Crear mi cuenta profesional <span class="hero-cta-arrow">→</span></a>
     </div>
   </div>
 </section>
@@ -1031,6 +1031,7 @@
   <div class="container">
     <div class="footer-brand">Perfecta<span>MENTE</span> Coach</div>
     <p class="footer-meta">© 2026 · <a href="{{ route('legal.terms') }}">Términos</a> · <a href="{{ route('legal.privacy') }}">Privacidad</a> · <a href="mailto:hola@planperfectamente.com">Contacto</a></p>
+    <p class="footer-meta">¿Es nutricionista? <a href="{{ route('register.nutri') }}" style="color: var(--gold);">Cree su cuenta profesional</a></p>
     <p class="footer-quote">"La fidelidad diaria es lo que separa a los campeones del resto." — @chichoqv</p>
   </div>
 </footer>

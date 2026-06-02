@@ -47,5 +47,10 @@
                 Registrarse
             </x-primary-button>
         </div>
+
+        <p class="text-xs text-text-secondary/60 text-center mt-6">
+            ¿Es nutricionista?
+            <a href="{{ route('register.nutri') }}" class="text-gold underline hover:no-underline">Cree su cuenta profesional</a>.
+        </p>
     </form>
 </x-guest-layout>

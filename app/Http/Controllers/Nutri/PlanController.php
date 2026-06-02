@@ -11,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -62,17 +61,33 @@ class PlanController extends Controller
      */
     public function extractPdf(Request $request, GeminiExtractorService $gemini): JsonResponse
     {
+        // NOTA: no usamos `mimetypes:`/`mimes:` ni Storage:: — ambos disparan
+        // getMimeType()/el adaptador local de Flysystem, que instancia un
+        // FinfoMimeTypeDetector → new finfo(). En prod (ea-php84) fileinfo está
+        // DESACTIVADO y eso revienta con "Class finfo not found". Validamos por
+        // extensión + magic bytes (%PDF) y escribimos con UploadedFile::move()
+        // → move_uploaded_file(), que no toca fileinfo ni Flysystem. (Mismo fix
+        // que OnboardingController::uploadPdf.)
         $request->validate([
-            'pdf' => ['required', 'file', 'mimetypes:application/pdf', 'max:10240'],
+            'pdf' => ['required', 'file', 'extensions:pdf', 'max:10240'],
         ], [
             'pdf.required' => 'Suba un PDF.',
-            'pdf.mimetypes' => 'El archivo debe ser un PDF válido.',
+            'pdf.extensions' => 'El archivo debe ser un PDF válido.',
             'pdf.max' => 'Máximo 10 MB.',
         ]);
 
-        // Guardamos temporal solo para que Gemini lo lea; lo borramos al final.
-        $path = $request->file('pdf')->store('plans/'.Auth::id().'/tmp');
-        $absolutePath = Storage::path($path);
+        $file = $request->file('pdf');
+
+        // Firma %PDF en lugar de MIME guessing (que necesita fileinfo).
+        if (strncmp((string) file_get_contents($file->getRealPath(), false, null, 0, 4), '%PDF', 4) !== 0) {
+            return response()->json(['error' => 'El archivo no parece ser un PDF válido.'], 422);
+        }
+
+        // Guardamos temporal SOLO para que Gemini lo lea; lo borramos al final.
+        $filename = Str::random(40).'.pdf';
+        $absoluteDir = storage_path('app/private/plans/'.Auth::id().'/tmp');
+        $file->move($absoluteDir, $filename);
+        $absolutePath = "{$absoluteDir}/{$filename}";
 
         set_time_limit(180);
 
@@ -83,14 +98,22 @@ class PlanController extends Controller
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
             ]);
-            Storage::delete($path);
+            // @unlink directo (no Storage::delete, que reventaría por fileinfo).
+            @unlink($absolutePath);
 
-            return response()->json([
-                'error' => 'No pudimos procesar el PDF automáticamente. Intente de nuevo; si el PDF es escaneado (imagen) o muy largo, puede cargar el plan manualmente.',
-            ], 422);
+            // Distinguir "servicio saturado" (503/429 de Google) de un PDF ilegible.
+            $overloaded = str_contains($e->getMessage(), 'sobrecargado')
+                || str_contains($e->getMessage(), '503')
+                || str_contains($e->getMessage(), '429');
+
+            $msg = $overloaded
+                ? 'El servicio de IA está saturado en este momento (alta demanda). No es problema del PDF — espere un minuto y reintente.'
+                : 'No pudimos procesar el PDF automáticamente. Intente de nuevo; si el PDF es escaneado (imagen) o muy largo, puede cargar el plan manualmente.';
+
+            return response()->json(['error' => $msg], 422);
         }
 
-        Storage::delete($path);
+        @unlink($absolutePath);
 
         // Normalizamos al shape del editor (incluye migrar suplementos planos a estructurado).
         $data = $this->migrateLegacySupplements(
